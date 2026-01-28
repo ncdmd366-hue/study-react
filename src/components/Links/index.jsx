@@ -1,5 +1,5 @@
-import styles from './Links.module.css'
-import ITEMS from '../../data/LinkItems'
+import styles from 'src/components/Links/Links.module.css'
+import ITEMS from 'src/data/LinkItems'
 
 export function Links() {
     return (

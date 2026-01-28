@@ -1,8 +1,8 @@
 import Head from 'next/head'
-import styles from '../styles/Home.module.css'
-import { Main } from '../components/Main/Main'
-import { Footer } from '../components/Footer/Footer'
-import { Header } from '../components/Header/Header'
+import styles from 'src/styles/Home.module.css'
+import { Header } from 'src/components/Header'
+import { Footer } from 'src/components/Footer'
+import { Main } from 'src/components/Main'
 
 export default function Home() {
 
