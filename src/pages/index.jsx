@@ -3,12 +3,8 @@ import styles from 'src/styles/Home.module.css'
 import { Header } from 'src/components/Header'
 import { Footer } from 'src/components/Footer'
 import { Main } from 'src/components/Main'
-import { useCounter } from 'src/components/Hooks/useCounter'
-import { useInputArray } from 'src/components/Hooks/useInputArray'
 
-export default function Home() {
-  const { count, isShow, handleCountClick, handleDisplay } = useCounter();
-  const { text, array, handleChange, handleAdd } = useInputArray();
+export default function Home(props) {
 
   return (
     <div className={styles.container}>
@@ -17,17 +13,17 @@ export default function Home() {
       </Head>
       <Header />
 
-      <button onClick={handleDisplay}>{isShow ? 'ボタン表示' : 'ボタン非表示'}</button>
-      {isShow ? <button onClick={handleCountClick}>カウント：{count}</button> : ""}
+      <button onClick={props.handleDisplay}>{props.isShow ? 'ボタン表示' : 'ボタン非表示'}</button>
+      {props.isShow ? <button onClick={props.handleCountClick}>カウント：{props.count}</button> : ""}
 
-      <input value={text} onChange={handleChange} />
-      <p>Your type is {text}</p>
+      <input value={props.text} onChange={props.handleChange} />
+      <p>Your type is {props.text}</p>
 
-      <button onClick={handleAdd}>追加</button>
+      <button onClick={props.handleAdd}>追加</button>
 
       {/*  追加した文字を表示 */}
       <ul>
-        {array.map((item, i) => (
+        {props.array.map((item, i) => (
           <li key={i}>{item}</li>
         ))}
       </ul>
