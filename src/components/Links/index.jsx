@@ -1,6 +1,6 @@
 import styles from 'src/components/Links/Links.module.css'
 
-export function Links({items}) {
+export const Links = ({ items }) => {
 
     return (
         <div className={styles.grid}>

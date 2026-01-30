@@ -10,7 +10,6 @@ export default function Home(props) {
     <div className={styles.container}>
       <Head>
         <title>about page</title>
-        <link rel="icon" href="/favicon.ico" />
       </Head>
       <Header />
 

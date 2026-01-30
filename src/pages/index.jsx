@@ -14,7 +14,9 @@ export default function Home(props) {
       <Header />
 
       <button onClick={props.handleDisplay}>{props.isShow ? 'ボタン表示' : 'ボタン非表示'}</button>
-      {props.isShow ? <button onClick={props.handleCountClick}>カウント：{props.count}</button> : ""}
+      <br />
+      {props.isShow ? <button onClick={props.handleCountClick}>カウントボタン</button> : ""}
+      {props.isShow ? <h2>{props.doubleCount}</h2> : ""}
 
       <input value={props.text} onChange={props.handleChange} />
       <p>Your type is {props.text}</p>

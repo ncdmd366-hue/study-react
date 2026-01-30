@@ -1,6 +1,6 @@
 import styles from 'src/components/Headline/Headline.module.css'
 
-export function Headline(props) {
+export const Headline = (props) => {
     return (
         <>
             <h1 className={styles.title}>{props.page} page</h1>

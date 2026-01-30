@@ -1,10 +1,10 @@
-import {  useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 
-export function useCounter() {
+export const useCounter = () => {
     const [count, setCount] = useState(0);
     const doubleCount = useMemo(() => {
         return count * 2;
-    },[count])
+    }, [count])
     const [isShow, setIsShow] = useState(true);
 
     const handleCountClick = () => {
@@ -15,5 +15,5 @@ export function useCounter() {
         setIsShow((prev) => !prev)
     }
 
-    return {count, isShow, doubleCount, handleCountClick, handleDisplay}
+    return { count, isShow, doubleCount, handleCountClick, handleDisplay }
 }
