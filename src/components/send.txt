@@ -1,0 +1,48 @@
+// 代わりにこれを追加
+filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => {
+  const [search, setSearch] = React.useState('');
+  const filtered = positionNameFilters.filter(f =>
+    (f.text as string).toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div style={{ padding: 8 }}>
+      <Input
+        placeholder="検索"
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        style={{ marginBottom: 8, display: 'block' }}
+      />
+      <Checkbox
+        checked={selectedKeys.length === filtered.length}
+        onChange={e => {
+          setSelectedKeys(e.target.checked ? filtered.map(f => f.value as string) : []);
+        }}
+      >
+        Select all items
+      </Checkbox>
+      <div style={{ maxHeight: 200, overflowY: 'auto' }}>
+        {filtered.map(f => (
+          <div key={f.value as string}>
+            <Checkbox
+              checked={selectedKeys.includes(f.value as string)}
+              onChange={e => {
+                const val = f.value as string;
+                setSelectedKeys(e.target.checked
+                  ? [...selectedKeys, val]
+                  : selectedKeys.filter(k => k !== val)
+                );
+              }}
+            >
+              {f.text as string}
+            </Checkbox>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop: 8 }}>
+        <Button type="primary" size="small" onClick={() => confirm()}>OK</Button>
+        <Button size="small" onClick={() => { clearFilters?.(); confirm(); }}>リセット</Button>
+      </div>
+    </div>
+  );
+},
