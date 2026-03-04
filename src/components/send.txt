@@ -1,16 +1,22 @@
-// カラム定義の外に別コンポーネントとして定義
-const FilterDropdown = ({
+import React, { useState } from 'react';
+import { Input, Checkbox, Button } from 'antd';
+import type { FilterDropdownProps } from 'antd/es/table/interface';
+
+interface FilterItem {
+  text: string;
+  value: string;
+}
+
+interface Props extends FilterDropdownProps {
+  filters: FilterItem[];
+}
+
+const FilterDropdown: React.FC<Props> = ({
   setSelectedKeys,
   selectedKeys,
   confirm,
   clearFilters,
   filters,
-}: {
-  setSelectedKeys: (keys: string[]) => void;
-  selectedKeys: string[];
-  confirm: () => void;
-  clearFilters?: () => void;
-  filters: { text: string; value: string }[];
 }) => {
   const [search, setSearch] = useState('');
 
@@ -18,8 +24,8 @@ const FilterDropdown = ({
     f.text.toLowerCase().includes(search.toLowerCase())
   );
 
-  const allChecked = filtered.length > 0 &&
-    filtered.every(f => selectedKeys.includes(f.value));
+  const allChecked =
+    filtered.length > 0 && filtered.every(f => selectedKeys.includes(f.value));
 
   return (
     <div style={{ padding: 8 }}>
@@ -33,7 +39,9 @@ const FilterDropdown = ({
         <Checkbox
           checked={allChecked}
           onChange={e => {
-            setSelectedKeys(e.target.checked ? filtered.map(f => f.value) : []);
+            setSelectedKeys(
+              e.target.checked ? filtered.map(f => f.value) : []
+            );
           }}
         >
           Select all items
@@ -47,8 +55,8 @@ const FilterDropdown = ({
               onChange={e => {
                 setSelectedKeys(
                   e.target.checked
-                    ? [...selectedKeys, f.value]
-                    : selectedKeys.filter(k => k !== f.value)
+                    ? [...(selectedKeys as string[]), f.value]
+                    : (selectedKeys as string[]).filter(k => k !== f.value)
                 );
               }}
             >
@@ -58,7 +66,14 @@ const FilterDropdown = ({
         ))}
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Button size="small" onClick={() => { clearFilters?.(); setSearch(''); confirm(); }}>
+        <Button
+          size="small"
+          onClick={() => {
+            clearFilters?.();
+            setSearch('');
+            confirm();
+          }}
+        >
           Reset
         </Button>
         <Button type="primary" size="small" onClick={() => confirm()}>
@@ -68,3 +83,19 @@ const FilterDropdown = ({
     </div>
   );
 };
+
+export default FilterDropdown;
+
+
+
+import FilterDropdown from './FilterDropdown';
+
+// カラム定義内
+filterDropdown: (props) => (
+  <FilterDropdown
+    {...props}
+    selectedKeys={props.selectedKeys as string[]}
+    filters={positionNameFilters as { text: string; value: string }[]}
+  />
+),
+
