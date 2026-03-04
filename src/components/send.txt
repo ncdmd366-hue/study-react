@@ -1,9 +1,25 @@
-// 代わりにこれを追加
-filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => {
-  const [search, setSearch] = React.useState('');
-  const filtered = positionNameFilters.filter(f =>
-    (f.text as string).toLowerCase().includes(search.toLowerCase())
+// カラム定義の外に別コンポーネントとして定義
+const FilterDropdown = ({
+  setSelectedKeys,
+  selectedKeys,
+  confirm,
+  clearFilters,
+  filters,
+}: {
+  setSelectedKeys: (keys: string[]) => void;
+  selectedKeys: string[];
+  confirm: () => void;
+  clearFilters?: () => void;
+  filters: { text: string; value: string }[];
+}) => {
+  const [search, setSearch] = useState('');
+
+  const filtered = filters.filter(f =>
+    f.text.toLowerCase().includes(search.toLowerCase())
   );
+
+  const allChecked = filtered.length > 0 &&
+    filtered.every(f => selectedKeys.includes(f.value));
 
   return (
     <div style={{ padding: 8 }}>
@@ -13,36 +29,42 @@ filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => {
         onChange={e => setSearch(e.target.value)}
         style={{ marginBottom: 8, display: 'block' }}
       />
-      <Checkbox
-        checked={selectedKeys.length === filtered.length}
-        onChange={e => {
-          setSelectedKeys(e.target.checked ? filtered.map(f => f.value as string) : []);
-        }}
-      >
-        Select all items
-      </Checkbox>
-      <div style={{ maxHeight: 200, overflowY: 'auto' }}>
+      <div style={{ marginBottom: 4 }}>
+        <Checkbox
+          checked={allChecked}
+          onChange={e => {
+            setSelectedKeys(e.target.checked ? filtered.map(f => f.value) : []);
+          }}
+        >
+          Select all items
+        </Checkbox>
+      </div>
+      <div style={{ maxHeight: 200, overflowY: 'auto', marginBottom: 8 }}>
         {filtered.map(f => (
-          <div key={f.value as string}>
+          <div key={f.value}>
             <Checkbox
-              checked={selectedKeys.includes(f.value as string)}
+              checked={selectedKeys.includes(f.value)}
               onChange={e => {
-                const val = f.value as string;
-                setSelectedKeys(e.target.checked
-                  ? [...selectedKeys, val]
-                  : selectedKeys.filter(k => k !== val)
+                setSelectedKeys(
+                  e.target.checked
+                    ? [...selectedKeys, f.value]
+                    : selectedKeys.filter(k => k !== f.value)
                 );
               }}
             >
-              {f.text as string}
+              {f.text}
             </Checkbox>
           </div>
         ))}
       </div>
-      <div style={{ marginTop: 8 }}>
-        <Button type="primary" size="small" onClick={() => confirm()}>OK</Button>
-        <Button size="small" onClick={() => { clearFilters?.(); confirm(); }}>リセット</Button>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Button size="small" onClick={() => { clearFilters?.(); setSearch(''); confirm(); }}>
+          Reset
+        </Button>
+        <Button type="primary" size="small" onClick={() => confirm()}>
+          OK
+        </Button>
       </div>
     </div>
   );
-},
+};
