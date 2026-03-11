@@ -1,14 +1,51 @@
-import React, { useState } from 'react';
-import { Input, Checkbox, Button } from 'antd';
-import type { FilterDropdownProps } from 'antd/es/table/interface';
+// otherFiltersのstateを追加
+const [otherFilters, setOtherFilters] = useState<Record<string, string[]>>({});
 
-interface FilterItem {
-  text: string;
-  value: string;
-}
+// onChangeを修正
+const onChange: TableProps<RowType>["onChange"] = (
+  _pagination,
+  _filters,
+  _sorter,
+  extra
+) => {
+  setCurrentRows(extra.currentDataSource);
 
+  // positionName以外のフィルタリング状態を保持
+  const { positionName, ...rest } = _filters;
+  setOtherFilters(
+    Object.fromEntries(
+      Object.entries(rest).filter(([, v]) => v !== null)
+    ) as Record<string, string[]>
+  );
+};
+
+// allPositionNameFiltersをrows + otherFiltersベースに変更
+const allPositionNameFilters = useMemo(() => {
+  const filteredRows = rows.filter(row =>
+    Object.entries(otherFilters).every(([key, values]) =>
+      values.includes(String(row[key as keyof RowType]))
+    )
+  );
+  return toFilters(uniq(filteredRows.map(item => item.positionName)));
+}, [rows, otherFilters]);
+
+// positionNameFiltersは不要なので削除
+
+
+
+
+
+
+
+
+
+
+
+
+
+// filtersを削除してallFiltersのみに
 interface Props extends FilterDropdownProps {
-  filters: FilterItem[];
+  allFilters: FilterItem[];
 }
 
 const FilterDropdown: React.FC<Props> = ({
@@ -16,86 +53,30 @@ const FilterDropdown: React.FC<Props> = ({
   selectedKeys,
   confirm,
   clearFilters,
-  filters,
+  allFilters,
 }) => {
   const [search, setSearch] = useState('');
 
-  const filtered = filters.filter(f =>
+  const filtered = allFilters.filter(f =>
     f.text.toLowerCase().includes(search.toLowerCase())
   );
 
-  const allChecked =
-    filtered.length > 0 && filtered.every(f => selectedKeys.includes(f.value));
-
-  return (
-    <div style={{ padding: 8 }}>
-      <Input
-        placeholder="検索"
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        style={{ marginBottom: 8, display: 'block' }}
-      />
-      <div style={{ marginBottom: 4 }}>
-        <Checkbox
-          checked={allChecked}
-          onChange={e => {
-            setSelectedKeys(
-              e.target.checked ? filtered.map(f => f.value) : []
-            );
-          }}
-        >
-          Select all items
-        </Checkbox>
-      </div>
-      <div style={{ maxHeight: 200, overflowY: 'auto', marginBottom: 8 }}>
-        {filtered.map(f => (
-          <div key={f.value}>
-            <Checkbox
-              checked={selectedKeys.includes(f.value)}
-              onChange={e => {
-                setSelectedKeys(
-                  e.target.checked
-                    ? [...(selectedKeys as string[]), f.value]
-                    : (selectedKeys as string[]).filter(k => k !== f.value)
-                );
-              }}
-            >
-              {f.text}
-            </Checkbox>
-          </div>
-        ))}
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Button
-          size="small"
-          onClick={() => {
-            clearFilters?.();
-            setSearch('');
-            confirm();
-          }}
-        >
-          Reset
-        </Button>
-        <Button type="primary" size="small" onClick={() => confirm()}>
-          OK
-        </Button>
-      </div>
-    </div>
-  );
-};
-
-export default FilterDropdown;
 
 
 
-import FilterDropdown from './FilterDropdown';
 
-// カラム定義内
+
+
 filterDropdown: (props) => (
   <FilterDropdown
     {...props}
     selectedKeys={props.selectedKeys as string[]}
-    filters={positionNameFilters as { text: string; value: string }[]}
+    allFilters={allPositionNameFilters as { text: string; value: string }[]}
   />
 ),
+
+
+
+
+
 
