@@ -1,82 +1,23 @@
-// otherFiltersのstateを追加
-const [otherFilters, setOtherFilters] = useState<Record<string, string[]>>({});
+import { render, screen } from "@testing-library/react";
+import { describe, it, expect } from "vitest";
+import InfoDashboard from "./InfoDashboard";
 
-// onChangeを修正
-const onChange: TableProps<RowType>["onChange"] = (
-  _pagination,
-  _filters,
-  _sorter,
-  extra
-) => {
-  setCurrentRows(extra.currentDataSource);
+describe("InfoDashboard", () => {
+  it("テーブルラベルが表示される", () => {
+    render(<InfoDashboard />);
+    expect(screen.getByText("DATA_SOURCE（情報源）の列の項目")).toBeInTheDocument();
+  });
 
-  // positionName以外のフィルタリング状態を保持
-  const { positionName, ...rest } = _filters;
-  setOtherFilters(
-    Object.fromEntries(
-      Object.entries(rest).filter(([, v]) => v !== null)
-    ) as Record<string, string[]>
-  );
-};
+  it("テーブルの全行が表示される", () => {
+    render(<InfoDashboard />);
+    expect(screen.getByText("アベイラビリティ会議時に登録されている運転情報より作成（※）")).toBeInTheDocument();
+    expect(screen.getByText("Cloudから取得できる運転データより作成")).toBeInTheDocument();
+    expect(screen.getByText(/から取得できる運転データより作成/)).toBeInTheDocument();
+    expect(screen.getByText("上記の情報源では入手できないデータを社内のヒアリングで入手")).toBeInTheDocument();
+  });
 
-// allPositionNameFiltersをrows + otherFiltersベースに変更
-const allPositionNameFilters = useMemo(() => {
-  const filteredRows = rows.filter(row =>
-    Object.entries(otherFilters).every(([key, values]) =>
-      values.includes(String(row[key as keyof RowType]))
-    )
-  );
-  return toFilters(uniq(filteredRows.map(item => item.positionName)));
-}, [rows, otherFilters]);
-
-// positionNameFiltersは不要なので削除
-
-
-
-
-
-
-
-
-
-
-
-
-
-// filtersを削除してallFiltersのみに
-interface Props extends FilterDropdownProps {
-  allFilters: FilterItem[];
-}
-
-const FilterDropdown: React.FC<Props> = ({
-  setSelectedKeys,
-  selectedKeys,
-  confirm,
-  clearFilters,
-  allFilters,
-}) => {
-  const [search, setSearch] = useState('');
-
-  const filtered = allFilters.filter(f =>
-    f.text.toLowerCase().includes(search.toLowerCase())
-  );
-
-
-
-
-
-
-
-filterDropdown: (props) => (
-  <FilterDropdown
-    {...props}
-    selectedKeys={props.selectedKeys as string[]}
-    allFilters={allPositionNameFilters as { text: string; value: string }[]}
-  />
-),
-
-
-
-
-
-
+  it("社内ヒアリングのキーが表示される", () => {
+    render(<InfoDashboard />);
+    expect(screen.getByText("社内ヒアリング")).toBeInTheDocument();
+  });
+});
