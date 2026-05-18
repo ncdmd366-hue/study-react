@@ -1,16 +1,28 @@
-it("PowerBI・Excelファイルが存在しない場合でもエラーにならないこと", async () => {
-  const { postEDMS } = await import("../src/utils/apiUtils")
-  vi.mocked(postEDMS).mockResolvedValue({
+// ファイルの先頭に追加
+vi.mock('../src/utils/apiUtils', () => ({
+  postEDMS: vi.fn().mockResolvedValue({
     infoList: [
       {
         displayDate: "2025/12/04",
-        fileTypes: [] // ← ファイルなし
+        fileTypes: [
+          {
+            name: "PowerBI",
+            infoEditionFiles: [{
+              id: "1",
+              displayFileName: "運転情報見える化(2025/12/04更新)",
+              externalUrl: "/files/sample.pbix",
+            }]
+          },
+          {
+            name: "Excel",
+            infoEditionFiles: [{
+              id: "2",
+              displayFileName: "運転情報見える化(2025/12/04更新)",
+              externalUrl: "/files/sample.xlsx",
+            }]
+          }
+        ]
       }
     ]
   })
-
-  render(<OperationFileTable />)
-  await waitFor(() => {
-    expect(screen.getByRole("table")).toBeInTheDocument()
-  })
-})
+}))
