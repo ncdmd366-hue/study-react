@@ -1,137 +1,16 @@
-// test/operationFileTable.test.tsx
-import { fireEvent, render, screen, waitFor } from "@testing-library/react"
-import { describe, it, expect, vi, afterEach } from "vitest"
-import OperationFileTable from "../src/operationInfo/OperationFileTable"
-
-// postEDMSをモック
-vi.mock("../src/utils/apiUtils", () => ({
-  postEDMS: vi.fn(),
-}))
-
-// モックデータ
-const mockResponse = {
-  infoList: [
-    {
-      displayDate: "2025/12/04",
-      fileTypes: [
-        {
-          name: "PowerBI",
-          infoEditionFiles: [{
-            id: "powerbi-id-1",
-            displayFileName: "運転情報見える化(2025/12/04更新)",
-            externalUrl: "/files/sample.pbix",
-          }],
-        },
-        {
-          name: "Excel",
-          infoEditionFiles: [{
-            id: "excel-id-1",
-            displayFileName: "運転情報見える化(2025/12/04更新)",
-            externalUrl: "/files/sample.xlsx",
-          }],
-        },
-      ],
-    },
-  ],
-}
-
-describe("operationFileTableのテスト", () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
+it("PowerBI・Excelファイルが存在しない場合でもエラーにならないこと", async () => {
+  const { postEDMS } = await import("../src/utils/apiUtils")
+  vi.mocked(postEDMS).mockResolvedValue({
+    infoList: [
+      {
+        displayDate: "2025/12/04",
+        fileTypes: [] // ← ファイルなし
+      }
+    ]
   })
 
-  it("テーブルが表示されること", async () => {
-    const { postEDMS } = await import("../src/utils/apiUtils")
-    vi.mocked(postEDMS).mockResolvedValue(mockResponse)
-
-    render(<OperationFileTable />)
-    await waitFor(() => {
-      expect(screen.getByRole("table")).toBeInTheDocument()
-    })
-  })
-
-  it("ヘッダーが正しく表示されること", async () => {
-    const { postEDMS } = await import("../src/utils/apiUtils")
-    vi.mocked(postEDMS).mockResolvedValue(mockResponse)
-
-    render(<OperationFileTable />)
-    await waitFor(() => {
-      expect(screen.getAllByText("日付")[0]).toBeInTheDocument()
-      expect(screen.getAllByText("PowerBI")[0]).toBeInTheDocument()
-      expect(screen.getAllByText("Excel")[0]).toBeInTheDocument()
-    })
-  })
-
-  it("データが正しく表示されること", async () => {
-    const { postEDMS } = await import("../src/utils/apiUtils")
-    vi.mocked(postEDMS).mockResolvedValue(mockResponse)
-
-    render(<OperationFileTable />)
-    await waitFor(() => {
-      expect(screen.getAllByText("運転情報見える化(2025/12/04更新)")[0])
-        .toBeInTheDocument()
-    })
-  })
-
-  it("APIエラー時にエラーメッセージが表示されること", async () => {
-    const { postEDMS } = await import("../src/utils/apiUtils")
-    vi.mocked(postEDMS).mockRejectedValue(new Error("APIエラー"))
-
-    render(<OperationFileTable />)
-    await waitFor(() => {
-      expect(screen.getByText("APIエラー")).toBeInTheDocument()
-    })
-  })
-
-  it("PowerBIリンククリックでダウンロード処理が呼ばれること", async () => {
-    const { postEDMS } = await import("../src/utils/apiUtils")
-    vi.mocked(postEDMS)
-      .mockResolvedValueOnce(mockResponse)  // fetchInfoList用
-      .mockResolvedValueOnce(new Blob())     // handleDownload用
-
-    render(<OperationFileTable />)
-
-    const mockCreateObjectURL = vi.fn().mockReturnValue("blob:url")
-    URL.createObjectURL = mockCreateObjectURL
-
-    await waitFor(() => {
-      const links = screen.getAllByText("運転情報見える化(2025/12/04更新)")
-      fireEvent.click(links[0])
-    })
-
-    await waitFor(() => {
-      expect(mockCreateObjectURL).toHaveBeenCalled()
-    })
-  })
-
-  it("Excelリンククリックでダウンロード処理が呼ばれること", async () => {
-    const { postEDMS } = await import("../src/utils/apiUtils")
-    vi.mocked(postEDMS)
-      .mockResolvedValueOnce(mockResponse)
-      .mockResolvedValueOnce(new Blob())
-
-    render(<OperationFileTable />)
-
-    const mockCreateObjectURL = vi.fn().mockReturnValue("blob:url")
-    URL.createObjectURL = mockCreateObjectURL
-
-    await waitFor(() => {
-      const links = screen.getAllByText("運転情報見える化(2025/12/04更新)")
-      fireEvent.click(links[1])
-    })
-
-    await waitFor(() => {
-      expect(mockCreateObjectURL).toHaveBeenCalled()
-    })
-  })
-
-  it("データが0件の場合テーブルが空で表示されること", async () => {
-    const { postEDMS } = await import("../src/utils/apiUtils")
-    vi.mocked(postEDMS).mockResolvedValue({ infoList: [] })
-
-    render(<OperationFileTable />)
-    await waitFor(() => {
-      expect(screen.getByRole("table")).toBeInTheDocument()
-    })
+  render(<OperationFileTable />)
+  await waitFor(() => {
+    expect(screen.getByRole("table")).toBeInTheDocument()
   })
 })
