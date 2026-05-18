@@ -1,28 +1,23 @@
-// ファイルの先頭に追加
-vi.mock('../src/utils/apiUtils', () => ({
-  postEDMS: vi.fn().mockResolvedValue({
-    infoList: [
-      {
-        displayDate: "2025/12/04",
-        fileTypes: [
-          {
-            name: "PowerBI",
-            infoEditionFiles: [{
-              id: "1",
-              displayFileName: "運転情報見える化(2025/12/04更新)",
-              externalUrl: "/files/sample.pbix",
-            }]
-          },
-          {
-            name: "Excel",
-            infoEditionFiles: [{
-              id: "2",
-              displayFileName: "運転情報見える化(2025/12/04更新)",
-              externalUrl: "/files/sample.xlsx",
-            }]
-          }
-        ]
-      }
-    ]
+it("エラー時にSnackbarが表示され、閉じるボタンで閉じられること", async () => {
+  const { postEDMS } = await import("../src/utils/apiUtils")
+  vi.mocked(postEDMS).mockRejectedValueOnce(
+    new Error("APIエラー")
+  )
+
+  render(<OperationFileTable />)
+
+  // Snackbarが開いていることを確認
+  await waitFor(() => {
+    expect(screen.getByTestId("snackbar-open").textContent).toBe("true")
+    expect(screen.getByTestId("snackbar-severity").textContent).toBe("error")
   })
-}))
+
+  // 閉じるボタンをクリック
+  const user = userEvent.setup()
+  await user.click(screen.getByTestId("snackbar-close"))
+
+  // Snackbarが閉じられることを確認
+  await waitFor(() => {
+    expect(screen.getByTestId("snackbar-open").textContent).toBe("false")
+  })
+})
