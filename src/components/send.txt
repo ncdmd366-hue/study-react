@@ -1,23 +1,28 @@
-it("エラー時にSnackbarが表示され、閉じるボタンで閉じられること", async () => {
-  const { postEDMS } = await import("../src/utils/apiUtils")
-  vi.mocked(postEDMS).mockRejectedValueOnce(
-    new Error("APIエラー")
-  )
+-- 1. M_FILE_TYPE
+INSERT INTO M_FILE_TYPE (id, name) VALUES ('1', 'PowerBI'), ('2', 'Excel');
 
-  render(<OperationFileTable />)
+-- 2. M_INFO_TYPE
+INSERT INTO M_INFO_TYPE (id, name_jp) VALUES ('1', '運転情報');
 
-  // Snackbarが開いていることを確認
-  await waitFor(() => {
-    expect(screen.getByTestId("snackbar-open").textContent).toBe("true")
-    expect(screen.getByTestId("snackbar-severity").textContent).toBe("error")
-  })
+-- 3. M_INFO_TYPE_FILE
+INSERT INTO M_INFO_TYPE_FILE (id, m_info_type_id, m_file_type_id) VALUES ('1', '1', '1'), ('2', '1', '2');
 
-  // 閉じるボタンをクリック
-  const user = userEvent.setup()
-  await user.click(screen.getByTestId("snackbar-close"))
+-- 4. T_INFO
+INSERT INTO T_INFO (id, m_info_type_id) VALUES ('1', '1');
 
-  // Snackbarが閉じられることを確認
-  await waitFor(() => {
-    expect(screen.getByTestId("snackbar-open").textContent).toBe("false")
-  })
-})
+-- 5. T_INFO_EDITION
+INSERT INTO T_INFO_EDITION (id, rev_number, doc_number, title_jp, remarks_jp, display_date, registration_date, sl, t_info_id)
+VALUES ('100A2E52-694E-F111-A132-D7A6458DA68E', '12.0.0', '12.0.1', '運転情報見える化', '備考1', '2025-12-01', '2025-11-13', 'A', '1');
+
+-- 6. T_INFO_EDITION_INDIVIDUAL
+INSERT INTO T_INFO_EDITION_INDIVIDUAL (t_info_edition_id, text1, int1, datetime1)
+VALUES ('100A2E52-694E-F111-A132-D7A6458DA68E', 'テキスト1', 0, '2025-12-01');
+
+-- 7. T_FILE
+INSERT INTO T_FILE (id, path, name) VALUES ('F001', '/files/運転情報見える化(2025/12/04更新).pbix', '運転情報見える化'),('F002', '/files/運転情報見える化(2025/12/04更新).xlsx', '運転情報見える化');
+
+-- 8. T_INFO_EDITION_FILE
+INSERT INTO T_INFO_EDITION_FILE (id, display_file_name, external_url, t_info_edition_id, m_file_type_id, t_file_id)
+VALUES 
+  ('EF001', '運転情報見える化(2025/12/04更新)', '/files/運転情報見える化(2025/12/04更新).pbix', '100A2E52-694E-F111-A132-D7A6458DA68E', '1', 'F001'),
+  ('EF002', '運転情報見える化(2025/12/04更新)', '/files/運転情報見える化(2025/12/04更新).xlsx', '100A2E52-694E-F111-A132-D7A6458DA68E', '2', 'F002');
