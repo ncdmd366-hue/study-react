@@ -1,2 +1,508 @@
-INSERT INTO T_INFO_EDITION_INDIVIDUAL (t_info_edition_id, text1, int1, datetime1, created_by)
-VALUES (8, 'テキスト1', 0, '2025-12-01', 'system');
+import React, { useState, useEffect, useCallback } from 'react'
+import {
+  Box,
+  Typography,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  TextField,
+  Checkbox,
+  FormControlLabel,
+  Button,
+  Collapse,
+} from '@mui/material'
+import type { SelectChangeEvent } from '@mui/material/Select'
+import './SearchPage.css'
+
+// ─────────────────────────────────────────────
+// 型定義
+// ─────────────────────────────────────────────
+export interface InformationTypeInfo {
+  id: string
+  name: string
+}
+
+export interface PublicTargetInfo {
+  id: string
+  name: string
+}
+
+export interface SearchConditionResponse {
+  informationTypes: InformationTypeInfo[]
+  publicTargets: PublicTargetInfo[]
+}
+
+export interface SearchParams {
+  informationType: string
+  documentNumber: string
+  title: string
+  displayDateFrom: string
+  displayDateTo: string
+  updateDateTimeFrom: string
+  updateDateTimeTo: string
+  showHistory: boolean
+  publicTarget: string
+  status: string
+  sl: string
+  ect: string
+  ear99: boolean
+}
+
+// ─────────────────────────────────────────────
+// 定数
+// ─────────────────────────────────────────────
+const STATUS_OPTIONS = [
+  { value: '', label: 'すべて' },
+  { value: 'draft', label: '一時保存' },
+  { value: 'published', label: '公開済' },
+]
+
+const SL_OPTIONS = [
+  { value: '', label: 'すべて' },
+  { value: '1', label: '1' },
+  { value: '2', label: '2' },
+  { value: '3', label: '3' },
+]
+
+const ECT_OPTIONS = [
+  { value: '', label: 'すべて' },
+  { value: 'none', label: '非該当' },
+  { value: '6_plasma', label: '6項(3)/Plasma TBC' },
+  { value: '13_r1hgp', label: '13項(3)/R1HGP' },
+  { value: '6_plasma_13_r1hgp', label: '6項(3)/Plasma TBC, 13項(3)/R1HGP' },
+]
+
+const INITIAL_PARAMS: SearchParams = {
+  informationType: '',
+  documentNumber: '',
+  title: '',
+  displayDateFrom: '',
+  displayDateTo: '',
+  updateDateTimeFrom: '',
+  updateDateTimeTo: '',
+  showHistory: false,
+  publicTarget: '',
+  status: '',
+  sl: '',
+  ect: '',
+  ear99: false,
+}
+
+const API_ENDPOINTS = {
+  CONDITION_LIST: '/api/edms/conditions',
+  DOCUMENT_LIST: '/api/edms/documents',
+}
+
+// postSSS 相当（プロジェクトのユーティリティに差し替える）
+const postApi = async <TRes,>(endpoint: string, body?: unknown): Promise<TRes> => {
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: body != null ? JSON.stringify(body) : undefined,
+  })
+  if (!res.ok) throw new Error(`API error: ${res.status}`)
+  return res.json() as Promise<TRes>
+}
+
+// ─────────────────────────────────────────────
+// コンポーネント
+// ─────────────────────────────────────────────
+interface SearchPageProps {
+  onSearch?: (params: SearchParams) => void
+  onRegister?: () => void
+}
+
+const SearchPage: React.FC<SearchPageProps> = ({ onSearch, onRegister }) => {
+  const [informationTypes, setInformationTypes] = useState<InformationTypeInfo[]>([])
+  const [publicTargets, setPublicTargets] = useState<PublicTargetInfo[]>([])
+  const [searchParams, setSearchParams] = useState<SearchParams>(INITIAL_PARAMS)
+  const [isConditionOpen, setIsConditionOpen] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [open, setOpen] = useState(false)
+  const [message, setMessage] = useState('')
+  const [severity, setSeverity] = useState<'success' | 'error' | 'warning' | 'info'>('info')
+
+  // 初期処理：検索条件マスタ取得
+  useEffect(() => {
+    const fetchSearchConditions = async () => {
+      try {
+        setLoading(true)
+        const data = await postApi<SearchConditionResponse>(API_ENDPOINTS.CONDITION_LIST)
+        setInformationTypes(data.informationTypes)
+        setPublicTargets(data.publicTargets)
+      } catch (error) {
+        const err = error as Error
+        setMessage(err.message)
+        setSeverity('error')
+        setOpen(true)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchSearchConditions()
+  }, [])
+
+  const handleChange = useCallback(
+    <K extends keyof SearchParams>(field: K, value: SearchParams[K]) => {
+      setSearchParams(prev => ({ ...prev, [field]: value }))
+    },
+    []
+  )
+
+  const handleSelectChange = useCallback(
+    (field: keyof SearchParams) => (e: SelectChangeEvent) => {
+      setSearchParams(prev => ({ ...prev, [field]: e.target.value }))
+    },
+    []
+  )
+
+  /**
+   * クリアボタン押下処理 検索条件欄に入力された値を初期化する
+   */
+  const clearHandler = useCallback(() => {
+    setSearchParams(INITIAL_PARAMS)
+  }, [])
+
+  /**
+   * 検索ボタン押下処理
+   */
+  const searchHandler = async () => {
+    try {
+      setLoading(true)
+      onSearch?.(searchParams)
+      // TODO: API呼び出し
+      // const data = await postApi<SearchResultResponse>(API_ENDPOINTS.DOCUMENT_LIST, searchParams)
+      // setSearchResults(data.documentList)
+    } catch (error) {
+      const err = error as Error
+      setMessage(err.message)
+      setSeverity('error')
+      setOpen(true)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Box>
+      <Box sx={{ padding: 2 }}>
+        {/* TODO: <PageTitle pageId="edms-search" /> */}
+        <Box
+          component="header"
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={2}
+        >
+          <Typography variant="h6" className="page-title">
+            EDMS | 検索・一覧
+          </Typography>
+        </Box>
+
+        {/* TODO: <MessageSnackbar open={open} message={message} severity={severity} onClose={() => setOpen(false)} /> */}
+        {/* TODO: <Loading loading={loading} /> */}
+
+        {/* 検索条件 */}
+        <Box component="section" className="search-card" aria-labelledby="cond-head">
+          <Box className="section-head">
+            <Typography variant="subtitle1" id="cond-head">
+              検索条件
+            </Typography>
+            <button
+              type="button"
+              className="collapse-btn"
+              onClick={() => setIsConditionOpen(prev => !prev)}
+              aria-expanded={isConditionOpen}
+              aria-controls="searchForm"
+            >
+              {isConditionOpen ? '▲' : '▼'}
+            </button>
+          </Box>
+
+          <Collapse in={isConditionOpen}>
+            <Box component="form" id="searchForm" className="form" noValidate>
+
+              {/* 行1：情報種別 / 文書番号 / タイトル */}
+              <Box className="form-row">
+                <Box className="field">
+                  <InputLabel className="label-title">情報種別</InputLabel>
+                  <FormControl fullWidth size="small" variant="outlined">
+                    <InputLabel id="information-type-label" sx={{ color: '#b0b0b0' }}>
+                      すべて
+                    </InputLabel>
+                    <Select
+                      labelId="information-type-label"
+                      id="information-type"
+                      name="informationType"
+                      label="すべて"
+                      value={searchParams.informationType}
+                      onChange={handleSelectChange('informationType')}
+                    >
+                      <MenuItem value=""><em>すべて</em></MenuItem>
+                      {informationTypes.map(item => (
+                        <MenuItem key={item.id} value={item.id}>
+                          {item.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+
+                <Box className="field">
+                  <InputLabel className="label-title" htmlFor="document-number">
+                    文書番号
+                  </InputLabel>
+                  <TextField
+                    id="document-number"
+                    name="documentNumber"
+                    placeholder="例：AQGT26-0081"
+                    variant="outlined"
+                    size="small"
+                    fullWidth
+                    value={searchParams.documentNumber}
+                    onChange={e => handleChange('documentNumber', e.target.value)}
+                  />
+                </Box>
+
+                <Box className="field">
+                  <InputLabel className="label-title" htmlFor="title">
+                    タイトル
+                  </InputLabel>
+                  <TextField
+                    id="title"
+                    name="title"
+                    placeholder="例：水平展開フォロー会議議事録 2020/03/16"
+                    variant="outlined"
+                    size="small"
+                    fullWidth
+                    value={searchParams.title}
+                    onChange={e => handleChange('title', e.target.value)}
+                  />
+                </Box>
+              </Box>
+
+              {/* 行2：表示日付 / 更新日時 / 表示オプション */}
+              <Box className="form-row">
+                <Box className="field">
+                  <InputLabel className="label-title">表示日付</InputLabel>
+                  <Box className="date-range">
+                    <TextField
+                      type="date"
+                      size="small"
+                      variant="outlined"
+                      value={searchParams.displayDateFrom}
+                      onChange={e => handleChange('displayDateFrom', e.target.value)}
+                      inputProps={{ 'aria-label': '表示日付 開始' }}
+                    />
+                    <span className="range-sep">〜</span>
+                    <TextField
+                      type="date"
+                      size="small"
+                      variant="outlined"
+                      value={searchParams.displayDateTo}
+                      onChange={e => handleChange('displayDateTo', e.target.value)}
+                      inputProps={{ 'aria-label': '表示日付 終了' }}
+                    />
+                  </Box>
+                </Box>
+
+                <Box className="field">
+                  <InputLabel className="label-title">更新日時</InputLabel>
+                  <Box className="date-range">
+                    <TextField
+                      type="datetime-local"
+                      size="small"
+                      variant="outlined"
+                      value={searchParams.updateDateTimeFrom}
+                      onChange={e => handleChange('updateDateTimeFrom', e.target.value)}
+                      inputProps={{ 'aria-label': '更新日時 開始' }}
+                    />
+                    <span className="range-sep">〜</span>
+                    <TextField
+                      type="datetime-local"
+                      size="small"
+                      variant="outlined"
+                      value={searchParams.updateDateTimeTo}
+                      onChange={e => handleChange('updateDateTimeTo', e.target.value)}
+                      inputProps={{ 'aria-label': '更新日時 終了' }}
+                    />
+                  </Box>
+                </Box>
+
+                <Box className="field field-option">
+                  <InputLabel className="label-title">表示オプション</InputLabel>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={searchParams.showHistory}
+                        onChange={e => handleChange('showHistory', e.target.checked)}
+                        size="small"
+                      />
+                    }
+                    label="過去履歴を表示する"
+                  />
+                </Box>
+              </Box>
+
+              {/* 行3：公開先 / ステータス */}
+              <Box className="form-row">
+                <Box className="field">
+                  <InputLabel className="label-title">公開先</InputLabel>
+                  <FormControl fullWidth size="small" variant="outlined">
+                    <InputLabel id="public-target-label" sx={{ color: '#b0b0b0' }}>
+                      すべて
+                    </InputLabel>
+                    <Select
+                      labelId="public-target-label"
+                      id="public-target"
+                      name="publicTarget"
+                      label="すべて"
+                      value={searchParams.publicTarget}
+                      onChange={handleSelectChange('publicTarget')}
+                    >
+                      <MenuItem value=""><em>すべて</em></MenuItem>
+                      {publicTargets.map(item => (
+                        <MenuItem key={item.id} value={item.id}>
+                          {item.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+
+                <Box className="field">
+                  <InputLabel className="label-title">ステータス</InputLabel>
+                  <FormControl fullWidth size="small" variant="outlined">
+                    <InputLabel id="status-label" sx={{ color: '#b0b0b0' }}>
+                      すべて
+                    </InputLabel>
+                    <Select
+                      labelId="status-label"
+                      id="status"
+                      name="status"
+                      label="すべて"
+                      value={searchParams.status}
+                      onChange={handleSelectChange('status')}
+                    >
+                      {STATUS_OPTIONS.map(opt => (
+                        <MenuItem key={opt.value} value={opt.value}>
+                          {opt.value === '' ? <em>{opt.label}</em> : opt.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+
+                <Box className="field" />
+              </Box>
+
+              {/* 行4：SL / ECT / EAR99 */}
+              <Box className="form-row">
+                <Box className="field">
+                  <InputLabel className="label-title">SL</InputLabel>
+                  <FormControl fullWidth size="small" variant="outlined">
+                    <InputLabel id="sl-label" sx={{ color: '#b0b0b0' }}>
+                      すべて
+                    </InputLabel>
+                    <Select
+                      labelId="sl-label"
+                      id="sl"
+                      name="sl"
+                      label="すべて"
+                      value={searchParams.sl}
+                      onChange={handleSelectChange('sl')}
+                    >
+                      {SL_OPTIONS.map(opt => (
+                        <MenuItem key={opt.value} value={opt.value}>
+                          {opt.value === '' ? <em>{opt.label}</em> : opt.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+
+                <Box className="field">
+                  <InputLabel className="label-title">ECT</InputLabel>
+                  <FormControl fullWidth size="small" variant="outlined">
+                    <InputLabel id="ect-label" sx={{ color: '#b0b0b0' }}>
+                      すべて
+                    </InputLabel>
+                    <Select
+                      labelId="ect-label"
+                      id="ect"
+                      name="ect"
+                      label="すべて"
+                      value={searchParams.ect}
+                      onChange={handleSelectChange('ect')}
+                    >
+                      {ECT_OPTIONS.map(opt => (
+                        <MenuItem key={opt.value} value={opt.value}>
+                          {opt.value === '' ? <em>{opt.label}</em> : opt.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+
+                <Box className="field field-option">
+                  <InputLabel className="label-title">EAR99</InputLabel>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={searchParams.ear99}
+                        onChange={e => handleChange('ear99', e.target.checked)}
+                        size="small"
+                      />
+                    }
+                    label="該当"
+                  />
+                </Box>
+              </Box>
+
+              {/* アクションボタン */}
+              <Box className="actions">
+                <Button
+                  variant="outlined"
+                  className="btn ghost"
+                  id="clearBtn"
+                  onClick={clearHandler}
+                >
+                  クリア
+                </Button>
+                <Button
+                  variant="contained"
+                  className="btn primary"
+                  id="searchBtn"
+                  onClick={searchHandler}
+                >
+                  検索
+                </Button>
+              </Box>
+
+            </Box>
+          </Collapse>
+        </Box>
+
+        {/* 検索結果 */}
+        <Box component="section" className="search-card">
+          <Box className="section-head">
+            <Typography variant="subtitle1">検索結果</Typography>
+            <Button
+              variant="contained"
+              className="btn primary"
+              id="registerBtn"
+              onClick={onRegister}
+            >
+              新規登録
+            </Button>
+          </Box>
+          {/* TODO: 検索結果テーブル */}
+        </Box>
+
+      </Box>
+    </Box>
+  )
+}
+
+export default SearchPage
