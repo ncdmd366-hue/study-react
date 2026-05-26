@@ -1,0 +1,49 @@
+// 情報種別
+http.post(base_url + API_ENDPOINTS.INFORMATION_TYPES, () => {
+  return HttpResponse.json([
+    { id: "", name: "すべて" },
+    { id: "1", name: "プロジェクト別リライアビリティデータ（RMC実績）" },
+    { id: "2", name: "プロジェクト別運転実績" },
+    { id: "3", name: "運転情報見える化" },
+    { id: "4", name: "水平展開フォロー会議議事録" },
+    { id: "5", name: "水平展開基本計画方針書" },
+  ]);
+}),
+
+// 公開先
+http.post(base_url + API_ENDPOINTS.PUBLIC_TARGETS, () => {
+  return HttpResponse.json([
+    { id: "", name: "すべて" },
+    { id: "SSS", name: "SSS" },
+  ]);
+}),
+
+// ステータス（マスター）
+http.post(base_url + API_ENDPOINTS.MASTER_STATUSES, () => {
+  return HttpResponse.json([
+    { id: "", name: "すべて" },
+    { id: "draft", name: "一時保存" },
+    { id: "published", name: "公開済" },
+  ]);
+}),
+
+// SL（マスター）
+http.post(base_url + API_ENDPOINTS.MASTER_SL, () => {
+  return HttpResponse.json([
+    { id: "", name: "すべて" },
+    { id: "1", name: "1" },
+    { id: "2", name: "2" },
+    { id: "3", name: "3" },
+  ]);
+}),
+
+// ECT（マスター）
+http.post(base_url + API_ENDPOINTS.MASTER_ECT, () => {
+  return HttpResponse.json([
+    { id: "", name: "すべて" },
+    { id: "none", name: "非該当" },
+    { id: "6_plasma", name: "6項(3)/Plasma TBC" },
+    { id: "13_r1hgp", name: "13項(3)/R1HGP" },
+    { id: "6_plasma_13_r1hgp", name: "6項(3)/Plasma TBC, 13項(3)/R1HGP" },
+  ]);
+}),
