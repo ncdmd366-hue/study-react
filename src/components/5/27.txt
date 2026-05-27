@@ -1,0 +1,57 @@
+const [documentNumber, setDocumentNumber] = useState('')
+const [title, setTitle] = useState('')
+const [displayDateFrom, setDisplayDateFrom] = useState('')
+const [displayDateTo, setDisplayDateTo] = useState('')
+const [updateDateTimeFrom, setUpdateDateTimeFrom] = useState('')
+const [updateDateTimeTo, setUpdateDateTimeTo] = useState('')
+const [showHistory, setShowHistory] = useState(false)
+const [ear99, setEar99] = useState(false)
+
+
+
+// 文書番号
+value={documentNumber}
+onChange={(e) => setDocumentNumber(e.target.value)}
+
+// タイトル
+value={title}
+onChange={(e) => setTitle(e.target.value)}
+
+// 表示日付
+value={displayDateFrom}
+onChange={(e) => setDisplayDateFrom(e.target.value)}
+value={displayDateTo}
+onChange={(e) => setDisplayDateTo(e.target.value)}
+
+// 更新日時
+value={updateDateTimeFrom}
+onChange={(e) => setUpdateDateTimeFrom(e.target.value)}
+value={updateDateTimeTo}
+onChange={(e) => setUpdateDateTimeTo(e.target.value)}
+
+// 表示オプション
+checked={showHistory}
+onChange={(e) => setShowHistory(e.target.checked)}
+
+// EAR99
+checked={ear99}
+onChange={(e) => setEar99(e.target.checked)}
+
+
+const clearHandler = useCallback(() => {
+  setDocumentNumber('')
+  setTitle('')
+  setDisplayDateFrom('')
+  setDisplayDateTo('')
+  setUpdateDateTimeFrom('')
+  setUpdateDateTimeTo('')
+  setShowHistory(false)
+  setEar99(false)
+  setSelectedInformationType(undefined)
+  setSelectedPublicTarget(undefined)
+  setSelectedStatus(undefined)
+  setSelectedSl(undefined)
+  setSelectedEct(undefined)
+}, [])
+
+
