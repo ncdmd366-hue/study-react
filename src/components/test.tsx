@@ -1,77 +1,73 @@
-import React, { useMemo, useState } from "react";
-import Table from "antd/es/table";
-import type { ColumnsType, TableProps } from "antd/es/table";
-
-interface DataType {
-  key: React.Key;
-  name: string;
-  age: number;
-  address: string;
+// 情報種別
+value={selectedInformationType?.id || ""}
+onChange={(e) => {
+  const selected = informationTypes.find(i => i.id === e.target.value)
+  setSelectedInformationType(selected)
+}}
+renderValue={(value) =>
+  value === "" ? "すべて" : selectedInformationType?.name ?? ""
 }
 
-const data: DataType[] = [
-  {
-    key: "1",
-    name: "John Brown",
-    age: 32,
-    address: "New York No. 1 Lake Park",
-  },
-  { key: "2", name: "Jim Red", age: 42, address: "London No. 1 Lake Park" },
-  { key: "3", name: "Joe Black", age: 32, address: "Sidney No. 1 Lake Park" },
-  { key: "4", name: "Jim Red", age: 32, address: "London No. 2 Lake Park" },
-];
-
-const uniq = (arr: string[]) => Array.from(new Set(arr)).filter(Boolean);
-const toFilters = (arr: string[]) => arr.map((v) => ({ text: v, value: v }));
-
-export default function App() {
-  // ✅ いま表示されてる行（フィルタ後）だけ保持
-  const [currentRows, setCurrentRows] = useState<DataType[]>(data);
-
-  // ✅ currentRows から filters を作る（相互に変わる）
-  const nameFilters = useMemo(
-    () => toFilters(uniq(currentRows.map((r) => r.name)).sort()),
-    [currentRows]
-  );
-  const addressFilters = useMemo(
-    () => toFilters(uniq(currentRows.map((r) => r.address)).sort()),
-    [currentRows]
-  );
-
-  const columns: ColumnsType<DataType> = useMemo(
-    () => [
-      {
-        title: "Name",
-        dataIndex: "name",
-        filters: nameFilters,
-        filterSearch: true,
-        onFilter: (value, record) => record.name === String(value),
-      },
-      {
-        title: "Age",
-        dataIndex: "age",
-        sorter: (a, b) => a.age - b.age,
-      },
-      {
-        title: "Address",
-        dataIndex: "address",
-        filters: addressFilters,
-        filterSearch: true,
-        onFilter: (value, record) => record.address === String(value),
-      },
-    ],
-    [nameFilters, addressFilters]
-  );
-
-  const onChange: TableProps<DataType>["onChange"] = (
-    pagination,
-    filters,
-    sorter,
-    extra
-  ) => {
-    // ✅ antd が計算した「フィルタ後の表示行」をそのまま採用
-    setCurrentRows((extra.currentDataSource as DataType[]) ?? data);
-  };
-
-  return <Table columns={columns} dataSource={data} onChange={onChange} />;
+// 公開先
+value={selectedPublicTarget?.id || ""}
+onChange={(e) => {
+  const selected = publicTargets.find(i => i.id === e.target.value)
+  setSelectedPublicTarget(selected)
+}}
+renderValue={(value) =>
+  value === "" ? "すべて" : selectedPublicTarget?.name ?? ""
 }
+
+// ステータス
+value={selectedStatus?.id || ""}
+onChange={(e) => {
+  const selected = statuses.find(i => i.id === e.target.value)
+  setSelectedStatus(selected)
+}}
+renderValue={(value) =>
+  value === "" ? "すべて" : selectedStatus?.name ?? ""
+}
+
+// SL
+value={selectedSl?.id || ""}
+onChange={(e) => {
+  const selected = slList.find(i => i.id === e.target.value)
+  setSelectedSl(selected)
+}}
+renderValue={(value) =>
+  value === "" ? "すべて" : selectedSl?.name ?? ""
+}
+
+// ECT
+value={selectedEct?.id || ""}
+onChange={(e) => {
+  const selected = ectList.find(i => i.id === e.target.value)
+  setSelectedEct(selected)
+}}
+renderValue={(value) =>
+  value === "" ? "すべて" : selectedEct?.name ?? ""
+}
+
+
+
+const [selectedInformationType, setSelectedInformationType] = 
+  useState<InformationTypeInfo | undefined>(undefined)
+const [selectedPublicTarget, setSelectedPublicTarget] = 
+  useState<PublicTargetInfo | undefined>(undefined)
+const [selectedStatus, setSelectedStatus] = 
+  useState<StatusInfo | undefined>(undefined)
+const [selectedSl, setSelectedSl] = 
+  useState<SlInfo | undefined>(undefined)
+const [selectedEct, setSelectedEct] = 
+  useState<EctInfo | undefined>(undefined)
+
+
+const clearHandler = useCallback(() => {
+  setSearchParams(INITIAL_PARAMS)
+  setSelectedInformationType(undefined)
+  setSelectedPublicTarget(undefined)
+  setSelectedStatus(undefined)
+  setSelectedSl(undefined)
+  setSelectedEct(undefined)
+}, [])
+
