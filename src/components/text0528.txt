@@ -1,20 +1,965 @@
-import { defineConfig, mergeConfig } from "vitest/config";
-import viteConfig from "./vite.config";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import "@testing-library/jest-dom";
 
-export default mergeConfig(
-  viteConfig,
-  defineConfig({
-    test: {
-      globals: true,
-      environment: "jsdom",
-      setupFiles: ["./vitest-setup.ts", "./test/setupTests.ts"],
-      testTimeout: 100000,
-      include: ["test/**/*.{test,spec}.{ts,tsx}"],
-      coverage: {
-        provider: "v8",
-        reporter: ["text", "html"],
-        reportsDirectory: "./coverage",
-      },
-    },
-  })
-);
+vi.mock("../apiUtils", () => ({
+  postEDMS: vi.fn(),
+  API_ENDPOINTS: {
+    CONDITION_INFOTYPE: "/condition/info-type",
+    CONDITION_STATUS: "/condition/status",
+    CONDITION_SL: "/condition/sl",
+    CONDITION_ECT: "/condition/ect",
+  },
+}));
+
+vi.mock("../constants/messages", () => ({
+  MESSAGES: {
+    DISPLAY_DATE_ERROR: "表示日付の開始日は終了日より前の日付を入力してください。",
+    UPDATE_DATE_ERROR: "更新日時の開始日時は終了日時より前の日時を入力してください。",
+  },
+}));
+
+vi.mock("../components/MessageSnackbar", () => ({
+  default: ({ open, message, severity, onClose }: any) =>
+    open ? (
+      <div data-testid="snackbar" data-severity={severity}>
+        {message}
+        <button onClick={onClose}>close</button>
+      </div>
+    ) : null,
+}));
+
+vi.mock("../components/Loading", () => ({
+  default: ({ loading }: any) =>
+    loading ? <div data-testid="loading" /> : null,
+}));
+
+vi.mock("@mui/material/Collapse", () => ({
+  default: ({ in: inProp, children }: any) =>
+    inProp ? <div data-testid="collapse-open">{children}</div> : null,
+}));
+
+import SearchPage from "./searchPage";
+import { postEDMS } from "../apiUtils";
+
+describe("SearchPage", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    document.body.classList.remove("centered");
+  });
+
+  // ── 初期レンダリング ──────────────────────────────────────────
+
+  it("ページタイトル『EDMS | 検索・一覧』が表示される", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    expect(screen.getByText("EDMS | 検索・一覧")).toBeInTheDocument();
+  });
+
+  it("クリアボタンが表示される", () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    expect(screen.getByRole("button", { name: "クリア" })).toBeInTheDocument();
+  });
+
+  it("検索ボタンが表示される", () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    expect(screen.getByRole("button", { name: "検索" })).toBeInTheDocument();
+  });
+
+  it("Loading は初期状態で表示されない", () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    expect(screen.queryByTestId("loading")).not.toBeInTheDocument();
+  });
+
+  it("Snackbar は初期状態で表示されない", () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    expect(screen.queryByTestId("snackbar")).not.toBeInTheDocument();
+  });
+
+  // ── useEffect: body classList / document.title ────────────────
+
+  it("マウント時に body へ centered クラスが付与される", () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    expect(document.body.classList.contains("centered")).toBe(true);
+  });
+
+  it("document.title が『EDMS | 検索・一覧』に設定される", () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    expect(document.title).toBe("EDMS | 検索・一覧");
+  });
+
+  it("アンマウント時に body から centered クラスが除去される", () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    const { unmount } = render(<SearchPage />);
+    expect(document.body.classList.contains("centered")).toBe(true);
+
+    unmount();
+
+    expect(document.body.classList.contains("centered")).toBe(false);
+  });
+
+  // ── 初期データ取得: 正常系 ────────────────────────────────────
+
+  it("4つの API エンドポイントが呼ばれる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(postEDMS).toHaveBeenCalledTimes(4));
+  });
+
+  it("情報種別 Select に取得データが表示される", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [{ id: "1", nameJp: "種別A" }, { id: "2", nameJp: "種別B" }] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByText("種別A")).toBeInTheDocument());
+    expect(screen.getByText("種別B")).toBeInTheDocument();
+  });
+
+  it("ステータス Select に取得データが表示される", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [{ searchId: "S1", searchNameJp: "下書き" }, { searchId: "S2", searchNameJp: "公開" }] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByText("下書き")).toBeInTheDocument());
+    expect(screen.getByText("公開")).toBeInTheDocument();
+  });
+
+  it("SL Select に取得データが表示される", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [{ id: "10", name: "SL-Alpha" }, { id: "11", name: "SL-Beta" }] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByText("SL-Alpha")).toBeInTheDocument());
+    expect(screen.getByText("SL-Beta")).toBeInTheDocument();
+  });
+
+  it("ECT Select に取得データが表示される", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [{ id: 100, nameJp: "ECT-X" }, { id: 101, nameJp: "ECT-Y" }] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByText("ECT-X")).toBeInTheDocument());
+    expect(screen.getByText("ECT-Y")).toBeInTheDocument();
+  });
+
+  it("EAR99 の静的データ（非該当・該当）が表示される", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByText("非該当")).toBeInTheDocument());
+    expect(screen.getByText("該当")).toBeInTheDocument();
+  });
+
+  it("データ取得中は Loading が表示され、完了後に非表示になる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>).mockImplementation(
+      () => new Promise((resolve) => setTimeout(() => resolve({ infoTypes: [], infoEditionStatusConditions: [], sls: [], ects: [] }), 100))
+    );
+
+    render(<SearchPage />);
+
+    expect(screen.getByTestId("loading")).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByTestId("loading")).not.toBeInTheDocument(), { timeout: 500 });
+  });
+
+  // ── 初期データ取得: 異常系 ────────────────────────────────────
+
+  it("API エラー時に Snackbar (error) が表示される", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("Network Error"));
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByTestId("snackbar")).toBeInTheDocument());
+    expect(screen.getByTestId("snackbar")).toHaveAttribute("data-severity", "error");
+    expect(screen.getByText("Network Error")).toBeInTheDocument();
+  });
+
+  it("API エラー後も Loading は非表示になる (finally)", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("fail"));
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.queryByTestId("loading")).not.toBeInTheDocument());
+  });
+
+  it("Snackbar の閉じるボタンで非表示になる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("err"));
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByTestId("snackbar")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "close" }));
+    await waitFor(() => expect(screen.queryByTestId("snackbar")).not.toBeInTheDocument());
+  });
+
+  // ── 検索条件の折りたたみ ──────────────────────────────────────
+
+  it("初期状態: 検索フォームが展開されている", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByTestId("collapse-open")).toBeInTheDocument());
+  });
+
+  it("セクションヘッダをクリックすると折りたたまれる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByTestId("collapse-open")).toBeInTheDocument());
+    fireEvent.click(screen.getByText("検索条件").closest("[class*='section-head']")!);
+    await waitFor(() => expect(screen.queryByTestId("collapse-open")).not.toBeInTheDocument());
+  });
+
+  it("折りたたんだ後に再クリックで展開される", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    const header = screen.getByText("検索条件").closest("[class*='section-head']")!;
+    fireEvent.click(header);
+    await waitFor(() => expect(screen.queryByTestId("collapse-open")).not.toBeInTheDocument());
+
+    fireEvent.click(header);
+    await waitFor(() => expect(screen.getByTestId("collapse-open")).toBeInTheDocument());
+  });
+
+  // ── フォーム入力 ──────────────────────────────────────────────
+
+  it("文書番号を入力できる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByPlaceholderText(/AQGT26/)).toBeInTheDocument());
+    const input = screen.getByPlaceholderText(/AQGT26/);
+    await userEvent.type(input, "DOC-001");
+
+    expect(input).toHaveValue("DOC-001");
+  });
+
+  it("タイトルを入力できる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByPlaceholderText(/水平展開/)).toBeInTheDocument());
+    const input = screen.getByPlaceholderText(/水平展開/);
+    await userEvent.type(input, "テストタイトル");
+
+    expect(input).toHaveValue("テストタイトル");
+  });
+
+  it("表示日付 From を入力できる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByLabelText("表示日付")).toBeInTheDocument());
+    const dateInputs = screen.getAllByDisplayValue("").filter((el) => (el as HTMLInputElement).type === "date");
+    fireEvent.change(dateInputs[0], { target: { value: "2024-01-01" } });
+
+    expect(dateInputs[0]).toHaveValue("2024-01-01");
+  });
+
+  it("表示日付 To を入力できる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByLabelText("表示日付")).toBeInTheDocument());
+    const dateInputs = screen.getAllByDisplayValue("").filter((el) => (el as HTMLInputElement).type === "date");
+    fireEvent.change(dateInputs[1], { target: { value: "2024-12-31" } });
+
+    expect(dateInputs[1]).toHaveValue("2024-12-31");
+  });
+
+  it("更新日時 From を入力できる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByLabelText("更新日時")).toBeInTheDocument());
+    const dtInputs = screen.getAllByDisplayValue("").filter((el) => (el as HTMLInputElement).type === "datetime-local");
+    fireEvent.change(dtInputs[0], { target: { value: "2024-01-01T00:00" } });
+
+    expect(dtInputs[0]).toHaveValue("2024-01-01T00:00");
+  });
+
+  it("更新日時 To を入力できる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByLabelText("更新日時")).toBeInTheDocument());
+    const dtInputs = screen.getAllByDisplayValue("").filter((el) => (el as HTMLInputElement).type === "datetime-local");
+    fireEvent.change(dtInputs[1], { target: { value: "2024-12-31T23:59" } });
+
+    expect(dtInputs[1]).toHaveValue("2024-12-31T23:59");
+  });
+
+  it("過去履歴チェックボックスを ON にできる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByLabelText("過去履歴を表示する")).toBeInTheDocument());
+    const checkbox = screen.getByLabelText("過去履歴を表示する");
+    expect(checkbox).not.toBeChecked();
+
+    fireEvent.click(checkbox);
+
+    expect(checkbox).toBeChecked();
+  });
+
+  it("情報種別 Select を変更できる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [{ id: "1", nameJp: "種別A" }] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByText("種別A")).toBeInTheDocument());
+    const select = screen.getByRole("combobox", { name: /情報種別/ });
+    fireEvent.change(select, { target: { value: "1" } });
+
+    expect(select).toHaveValue("1");
+  });
+
+  it("ステータス Select を変更できる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [{ searchId: "S1", searchNameJp: "下書き" }] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByText("下書き")).toBeInTheDocument());
+    const select = screen.getByRole("combobox", { name: /ステータス/ });
+    fireEvent.change(select, { target: { value: "S1" } });
+
+    expect(select).toHaveValue("S1");
+  });
+
+  it("SL Select を変更できる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [{ id: "10", name: "SL-Alpha" }] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByText("SL-Alpha")).toBeInTheDocument());
+    const select = screen.getByRole("combobox", { name: /^SL$/ });
+    fireEvent.change(select, { target: { value: "10" } });
+
+    expect(select).toHaveValue("10");
+  });
+
+  it("ECT Select を変更できる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [{ id: 100, nameJp: "ECT-X" }] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByText("ECT-X")).toBeInTheDocument());
+    const select = screen.getByRole("combobox", { name: /^ECT$/ });
+    fireEvent.change(select, { target: { value: "100" } });
+
+    expect(select).toHaveValue("100");
+  });
+
+  it("EAR99 Select を変更できる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByText("非該当")).toBeInTheDocument());
+    const select = screen.getByRole("combobox", { name: /EAR99/ });
+    fireEvent.change(select, { target: { value: "1" } });
+
+    expect(select).toHaveValue("1");
+  });
+
+  // ── クリアボタン ──────────────────────────────────────────────
+
+  it("クリア: 文書番号がリセットされる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByPlaceholderText(/AQGT26/)).toBeInTheDocument());
+    const input = screen.getByPlaceholderText(/AQGT26/);
+    await userEvent.type(input, "DOC-TEST");
+
+    fireEvent.click(screen.getByRole("button", { name: "クリア" }));
+
+    await waitFor(() => expect(input).toHaveValue(""));
+  });
+
+  it("クリア: タイトルがリセットされる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByPlaceholderText(/水平展開/)).toBeInTheDocument());
+    const input = screen.getByPlaceholderText(/水平展開/);
+    await userEvent.type(input, "テスト");
+
+    fireEvent.click(screen.getByRole("button", { name: "クリア" }));
+
+    await waitFor(() => expect(input).toHaveValue(""));
+  });
+
+  it("クリア: 情報種別 Select がリセットされる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [{ id: "1", nameJp: "種別A" }] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByText("種別A")).toBeInTheDocument());
+    const select = screen.getByRole("combobox", { name: /情報種別/ });
+    fireEvent.change(select, { target: { value: "1" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "クリア" }));
+
+    await waitFor(() => expect(select).toHaveValue(""));
+  });
+
+  it("クリア: ステータス Select がリセットされる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [{ searchId: "S1", searchNameJp: "下書き" }] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByText("下書き")).toBeInTheDocument());
+    const select = screen.getByRole("combobox", { name: /ステータス/ });
+    fireEvent.change(select, { target: { value: "S1" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "クリア" }));
+
+    await waitFor(() => expect(select).toHaveValue(""));
+  });
+
+  it("クリア: SL Select がリセットされる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [{ id: "10", name: "SL-Alpha" }] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByText("SL-Alpha")).toBeInTheDocument());
+    const select = screen.getByRole("combobox", { name: /^SL$/ });
+    fireEvent.change(select, { target: { value: "10" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "クリア" }));
+
+    await waitFor(() => expect(select).toHaveValue(""));
+  });
+
+  it("クリア: ECT Select がリセットされる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [{ id: 100, nameJp: "ECT-X" }] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByText("ECT-X")).toBeInTheDocument());
+    const select = screen.getByRole("combobox", { name: /^ECT$/ });
+    fireEvent.change(select, { target: { value: "100" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "クリア" }));
+
+    await waitFor(() => expect(select).toHaveValue(""));
+  });
+
+  it("クリア: EAR99 Select がリセットされる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByText("非該当")).toBeInTheDocument());
+    const select = screen.getByRole("combobox", { name: /EAR99/ });
+    fireEvent.change(select, { target: { value: "1" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "クリア" }));
+
+    await waitFor(() => expect(select).toHaveValue(""));
+  });
+
+  it("クリア: 過去履歴チェックが false にリセットされる", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByLabelText("過去履歴を表示する")).toBeInTheDocument());
+    const checkbox = screen.getByLabelText("過去履歴を表示する");
+    fireEvent.click(checkbox);
+    expect(checkbox).toBeChecked();
+
+    fireEvent.click(screen.getByRole("button", { name: "クリア" }));
+
+    await waitFor(() => expect(checkbox).not.toBeChecked());
+  });
+
+  // ── 検索: 表示日付バリデーション ─────────────────────────────
+
+  it("表示日付: From > To のとき error Snackbar が表示される", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByLabelText("表示日付")).toBeInTheDocument());
+    const dateInputs = screen.getAllByDisplayValue("").filter((el) => (el as HTMLInputElement).type === "date");
+    fireEvent.change(dateInputs[0], { target: { value: "2024-12-31" } });
+    fireEvent.change(dateInputs[1], { target: { value: "2024-01-01" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "検索" }));
+
+    await waitFor(() => expect(screen.getByTestId("snackbar")).toBeInTheDocument());
+    expect(screen.getByTestId("snackbar")).toHaveAttribute("data-severity", "error");
+    expect(screen.getByText(/表示日付の開始日は終了日より前/)).toBeInTheDocument();
+  });
+
+  it("表示日付: From === To のときエラーにならない", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByLabelText("表示日付")).toBeInTheDocument());
+    const dateInputs = screen.getAllByDisplayValue("").filter((el) => (el as HTMLInputElement).type === "date");
+    fireEvent.change(dateInputs[0], { target: { value: "2024-06-01" } });
+    fireEvent.change(dateInputs[1], { target: { value: "2024-06-01" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "検索" }));
+
+    await waitFor(() => expect(screen.queryByText(/表示日付の開始日は終了日より前/)).not.toBeInTheDocument());
+  });
+
+  it("表示日付: From のみ入力はバリデーション対象外", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByLabelText("表示日付")).toBeInTheDocument());
+    const dateInputs = screen.getAllByDisplayValue("").filter((el) => (el as HTMLInputElement).type === "date");
+    fireEvent.change(dateInputs[0], { target: { value: "2024-12-31" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "検索" }));
+
+    await waitFor(() => expect(screen.queryByText(/表示日付の開始日は終了日より前/)).not.toBeInTheDocument());
+  });
+
+  it("表示日付: To のみ入力はバリデーション対象外", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByLabelText("表示日付")).toBeInTheDocument());
+    const dateInputs = screen.getAllByDisplayValue("").filter((el) => (el as HTMLInputElement).type === "date");
+    fireEvent.change(dateInputs[1], { target: { value: "2024-01-01" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "検索" }));
+
+    await waitFor(() => expect(screen.queryByText(/表示日付の開始日は終了日より前/)).not.toBeInTheDocument());
+  });
+
+  // ── 検索: 更新日時バリデーション ─────────────────────────────
+
+  it("更新日時: From > To のとき error Snackbar が表示される", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByLabelText("更新日時")).toBeInTheDocument());
+    const dtInputs = screen.getAllByDisplayValue("").filter((el) => (el as HTMLInputElement).type === "datetime-local");
+    fireEvent.change(dtInputs[0], { target: { value: "2024-12-31T23:59" } });
+    fireEvent.change(dtInputs[1], { target: { value: "2024-01-01T00:00" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "検索" }));
+
+    await waitFor(() => expect(screen.getByTestId("snackbar")).toBeInTheDocument());
+    expect(screen.getByTestId("snackbar")).toHaveAttribute("data-severity", "error");
+    expect(screen.getByText(/更新日時の開始日時は終了日時より前/)).toBeInTheDocument();
+  });
+
+  it("更新日時: From === To のときエラーにならない", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByLabelText("更新日時")).toBeInTheDocument());
+    const dtInputs = screen.getAllByDisplayValue("").filter((el) => (el as HTMLInputElement).type === "datetime-local");
+    fireEvent.change(dtInputs[0], { target: { value: "2024-06-01T12:00" } });
+    fireEvent.change(dtInputs[1], { target: { value: "2024-06-01T12:00" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "検索" }));
+
+    await waitFor(() => expect(screen.queryByText(/更新日時の開始日時は終了日時より前/)).not.toBeInTheDocument());
+  });
+
+  it("更新日時: From のみ入力はバリデーション対象外", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByLabelText("更新日時")).toBeInTheDocument());
+    const dtInputs = screen.getAllByDisplayValue("").filter((el) => (el as HTMLInputElement).type === "datetime-local");
+    fireEvent.change(dtInputs[0], { target: { value: "2024-12-31T23:59" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "検索" }));
+
+    await waitFor(() => expect(screen.queryByText(/更新日時の開始日時は終了日時より前/)).not.toBeInTheDocument());
+  });
+
+  it("更新日時: To のみ入力はバリデーション対象外", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByLabelText("更新日時")).toBeInTheDocument());
+    const dtInputs = screen.getAllByDisplayValue("").filter((el) => (el as HTMLInputElement).type === "datetime-local");
+    fireEvent.change(dtInputs[1], { target: { value: "2024-01-01T00:00" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "検索" }));
+
+    await waitFor(() => expect(screen.queryByText(/更新日時の開始日時は終了日時より前/)).not.toBeInTheDocument());
+  });
+
+  // ── 検索: 正常系 ─────────────────────────────────────────────
+
+  it("条件なしで検索してもエラーにならない", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(postEDMS).toHaveBeenCalledTimes(4));
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "検索" }));
+    });
+
+    expect(screen.queryByTestId("snackbar")).not.toBeInTheDocument();
+  });
+
+  it("表示日付 From < To の正常入力で検索エラーにならない", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByLabelText("表示日付")).toBeInTheDocument());
+    const dateInputs = screen.getAllByDisplayValue("").filter((el) => (el as HTMLInputElement).type === "date");
+    fireEvent.change(dateInputs[0], { target: { value: "2024-01-01" } });
+    fireEvent.change(dateInputs[1], { target: { value: "2024-12-31" } });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "検索" }));
+    });
+
+    expect(screen.queryByText(/表示日付の開始日は終了日より前/)).not.toBeInTheDocument();
+  });
+
+  it("更新日時 From < To の正常入力で検索エラーにならない", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByLabelText("更新日時")).toBeInTheDocument());
+    const dtInputs = screen.getAllByDisplayValue("").filter((el) => (el as HTMLInputElement).type === "datetime-local");
+    fireEvent.change(dtInputs[0], { target: { value: "2024-01-01T00:00" } });
+    fireEvent.change(dtInputs[1], { target: { value: "2024-12-31T23:59" } });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "検索" }));
+    });
+
+    expect(screen.queryByText(/更新日時の開始日時は終了日時より前/)).not.toBeInTheDocument();
+  });
+
+  // ── アクセシビリティ ──────────────────────────────────────────
+
+  it("aria-label『画面タイトル』が存在する", () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    expect(screen.getByLabelText("画面タイトル")).toBeInTheDocument();
+  });
+
+  it("id='clearBtn' が付与されている", () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    expect(document.getElementById("clearBtn")).toBeInTheDocument();
+  });
+
+  it("id='searchBtn' が付与されている", () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    expect(document.getElementById("searchBtn")).toBeInTheDocument();
+  });
+
+  // ── Select renderValue ────────────────────────────────────────
+
+  it("情報種別: 未選択時は『すべて』と表示される", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [{ id: "1", nameJp: "種別A" }] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByText("種別A")).toBeInTheDocument());
+
+    expect(screen.getByRole("combobox", { name: /情報種別/ })).toHaveTextContent("すべて");
+  });
+
+  it("ステータス: 未選択時は『すべて』と表示される", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [{ searchId: "S1", searchNameJp: "下書き" }] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByText("下書き")).toBeInTheDocument());
+
+    expect(screen.getByRole("combobox", { name: /ステータス/ })).toHaveTextContent("すべて");
+  });
+
+  it("EAR99: 未選択時は『すべて』と表示される", async () => {
+    (postEDMS as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ infoTypes: [] })
+      .mockResolvedValueOnce({ infoEditionStatusConditions: [] })
+      .mockResolvedValueOnce({ sls: [] })
+      .mockResolvedValueOnce({ ects: [] });
+
+    render(<SearchPage />);
+
+    await waitFor(() => expect(screen.getByText("非該当")).toBeInTheDocument());
+
+    expect(screen.getByRole("combobox", { name: /EAR99/ })).toHaveTextContent("すべて");
+  });
+});
