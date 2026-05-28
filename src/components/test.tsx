@@ -29,6 +29,9 @@ MSSQL_MIG_PASSWORD=P@ssw0rd_Edms123
 
 EXEC xp_readerrorlog 0, 1, N'Server is listening on';
 
+reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server" /s /f "TcpPort"
+
+
 
 
 
