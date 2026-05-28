@@ -27,9 +27,8 @@ MSSQL_MIG_USER=edms_admin
 MSSQL_MIG_PASSWORD=P@ssw0rd_Edms123
 
 
-SELECT local_net_address, local_tcp_port 
-FROM sys.dm_exec_connections 
-WHERE session_id = @@SPID;
+EXEC xp_readerrorlog 0, 1, N'Server is listening on';
+
 
 
 
