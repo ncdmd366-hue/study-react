@@ -1,21 +1,23 @@
--- もし途中まで作成されていたら削除（エラーが出ても無視してOK）
-USE EDMS;
-DROP USER IF EXISTS edms_admin;
+-- Step1: EDMSデータベース作成（既存でもエラーにならない）
+IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'EDMS')
+    CREATE DATABASE EDMS;
 GO
+
+-- Step2: ログイン作成（パスワード強化）
 USE master;
-DROP LOGIN IF EXISTS edms_admin;
+GO
+CREATE LOGIN edms_admin WITH PASSWORD = 'P@ssw0rd_Edms123',
+    CHECK_POLICY = OFF,
+    CHECK_EXPIRATION = OFF;
 GO
 
--- パスワードを強くして再作成
-CREATE LOGIN edms_admin WITH PASSWORD = 'Edms_Admin1!';
-GO
-
+-- Step3: DBユーザー作成と権限付与
 USE EDMS;
 GO
 CREATE USER edms_admin FOR LOGIN edms_admin;
 GO
-
 ALTER ROLE db_ddladmin ADD MEMBER edms_admin;
 ALTER ROLE db_datareader ADD MEMBER edms_admin;
 ALTER ROLE db_datawriter ADD MEMBER edms_admin;
 GO
+
