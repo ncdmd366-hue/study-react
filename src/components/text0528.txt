@@ -1,0 +1,23 @@
+const validateDates = (): boolean => {
+  // 表示日付：前後チェック（両方入力時のみ）
+  if (displayDateFrom && displayDateTo) {
+    if (new Date(displayDateFrom) >= new Date(displayDateTo)) {
+      setMessage('表示日付の開始日は終了日より前の日付を入力してください')
+      setSeverity('error')
+      setOpen(true)
+      return false
+    }
+  }
+
+  // 更新日時：前後チェック（両方入力時のみ）
+  if (updateDateTimeFrom && updateDateTimeTo) {
+    if (new Date(updateDateTimeFrom) >= new Date(updateDateTimeTo)) {
+      setMessage('更新日時の開始日時は終了日時より前の日時を入力してください')
+      setSeverity('error')
+      setOpen(true)
+      return false
+    }
+  }
+
+  return true
+}
