@@ -21,3 +21,10 @@ ALTER ROLE db_datareader ADD MEMBER edms_admin;
 ALTER ROLE db_datawriter ADD MEMBER edms_admin;
 GO
 
+MSSQL_MIG_HOST=localhost\SQLEXPRESS
+MSSQL_MIG_DB=EDMS
+MSSQL_MIG_USER=edms_admin
+MSSQL_MIG_PASSWORD=P@ssw0rd_Edms123
+
+
+
