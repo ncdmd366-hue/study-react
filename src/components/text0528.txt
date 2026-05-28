@@ -1,2 +1,20 @@
-npm install -D vitest@3.2.4 @vitest/coverage-v8@3.2.4 @testing-library/react @testing-library/user-event @testing-library/jest-dom jsdom @vitejs/plugin-react
+import { defineConfig, mergeConfig } from "vitest/config";
+import viteConfig from "./vite.config";
 
+export default mergeConfig(
+  viteConfig,
+  defineConfig({
+    test: {
+      globals: true,
+      environment: "jsdom",
+      setupFiles: ["./vitest-setup.ts", "./test/setupTests.ts"],
+      testTimeout: 100000,
+      include: ["test/**/*.{test,spec}.{ts,tsx}"],
+      coverage: {
+        provider: "v8",
+        reporter: ["text", "html"],
+        reportsDirectory: "./coverage",
+      },
+    },
+  })
+);
