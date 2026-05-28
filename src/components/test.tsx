@@ -31,6 +31,9 @@ EXEC xp_readerrorlog 0, 1, N'Server is listening on';
 
 reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server" /s /f "TcpPort"
 
+reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL16.SQLEXPRESS\MSSQLServer\SuperSocketNetLib\Tcp" /v Enabled
+
+
 
 
 
