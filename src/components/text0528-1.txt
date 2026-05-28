@@ -1,0 +1,13 @@
+vi.mock("@mui/material/Select", () => ({
+  default: ({ children, onChange, value }: any) => (
+    <select onChange={onChange} value={value}>
+      {children}
+    </select>
+  ),
+}));
+
+vi.mock("@mui/material/MenuItem", () => ({
+  default: ({ children, value }: any) => (
+    <option value={value}>{children}</option>
+  ),
+}));
