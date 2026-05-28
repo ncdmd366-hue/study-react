@@ -1,6 +1,16 @@
+vi.mock("@mui/material/FormControl", () => ({
+  default: ({ children }: any) => <div>{children}</div>,
+}));
+
+vi.mock("@mui/material/InputLabel", () => ({
+  default: ({ children, htmlFor }: any) => (
+    <label htmlFor={htmlFor}>{children}</label>
+  ),
+}));
+
 vi.mock("@mui/material/Select", () => ({
-  default: ({ children, onChange, value }: any) => (
-    <select onChange={onChange} value={value}>
+  default: ({ children, onChange, value, id }: any) => (
+    <select id={id} onChange={onChange} value={value ?? ""}>
       {children}
     </select>
   ),
