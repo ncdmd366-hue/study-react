@@ -1,0 +1,19 @@
+it("セクションヘッダをクリックするたびに折りたたみ状態が切り替わること", async () => {
+  const user = userEvent.setup();
+  mockAllApisEmpty();
+
+  render(<SearchPage />);
+
+  await waitFor(() => expect(screen.getByTestId("collapse-open")).toBeInTheDocument());
+
+  const icon = screen.getByText("▼");
+
+  // クリックで折りたたむ
+  await user.click(icon);
+  await waitFor(() => expect(screen.queryByTestId("collapse-open")).not.toBeInTheDocument());
+
+  // 再クリックで展開
+  const iconClosed = screen.getByText("►");
+  await user.click(iconClosed);
+  await waitFor(() => expect(screen.getByTestId("collapse-open")).toBeInTheDocument());
+});
