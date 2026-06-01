@@ -217,3 +217,54 @@ const SearchResultTable: React.FC<SearchResultTableProps> = ({ searchResults }) 
 }
 
 export default SearchResultTable
+
+
+
+
+
+
+
+
+
+<Table
+  size="small"
+  sx={{
+    tableLayout: 'fixed',
+    '& .MuiTableCell-root': { border: '1px solid #d0d5dd' },
+  }}
+>
+  <TableHead>
+    <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+      {[
+        { label: '文書番号',   width: '100px' },
+        { label: '情報種別',   width: '120px' },
+        { label: 'タイトル',   width: '200px' },
+        { label: 'Rev',        width: '40px'  },
+        { label: '差替',       width: '40px'  },
+        { label: 'ステータス', width: '80px'  },
+        { label: 'ファイル',   width: '200px' },
+        { label: '公開先',     width: '60px'  },
+        { label: '表示日付',   width: '90px'  },
+        { label: 'SL',         width: '40px'  },
+        { label: 'ECT',        width: '80px'  },
+        { label: 'EAR99',      width: '60px'  },
+        { label: '更新日時',   width: '130px' },
+        { label: '操作',       width: '50px'  },
+      ].map(({ label, width }) => (
+        <TableCell
+          key={label}
+          sx={{
+            width,
+            fontSize: '12px',
+            fontWeight: 'bold',
+            whiteSpace: 'nowrap',
+            backgroundColor: '#f5f5f5',
+            padding: '6px 8px',
+          }}
+        >
+          {label}
+        </TableCell>
+      ))}
+    </TableRow>
+  </TableHead>
+
