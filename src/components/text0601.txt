@@ -1,0 +1,219 @@
+import React from 'react'
+import {
+  Box,
+  Button,
+  Chip,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from '@mui/material'
+import type { InfoResultListResponseDto } from '../components/table/types'
+import './SearchResultTable.css'
+
+// ─────────────────────────────────────────────
+// 型定義
+// ─────────────────────────────────────────────
+interface SearchResultTableProps {
+  searchResults: InfoResultListResponseDto[]
+}
+
+// ─────────────────────────────────────────────
+// ステータスバッジ
+// ─────────────────────────────────────────────
+const StatusChip: React.FC<{ status: InfoResultListResponseDto['infoEditionStatus'] }> = ({
+  status,
+}) => (
+  <Chip
+    label={status.nameJp}
+    size="small"
+    color={status.pastFlg === 1 ? 'warning' : 'primary'}
+    sx={{ fontSize: '11px', height: '22px' }}
+  />
+)
+
+// ─────────────────────────────────────────────
+// コンポーネント
+// ─────────────────────────────────────────────
+const SearchResultTable: React.FC<SearchResultTableProps> = ({ searchResults }) => {
+  return (
+    <Box component="section" className="search-card">
+      {/* ヘッダー */}
+      <Box className="section-head">
+        <Typography variant="subtitle1">検索結果</Typography>
+        <Button
+          variant="contained"
+          className="btn primary"
+        >
+          新規登録
+        </Button>
+      </Box>
+
+      {/* テーブル */}
+      <TableContainer>
+        <Table size="small">
+          <TableHead>
+            <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+              {[
+                '文書番号',
+                '情報種別',
+                'タイトル',
+                'Rev',
+                '差替',
+                'ステータス',
+                'ファイル',
+                '公開先',
+                '表示日付',
+                'SL',
+                'ECT',
+                'EAR99',
+                '更新日時',
+                '操作',
+              ].map((label) => (
+                <TableCell
+                  key={label}
+                  sx={{
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    whiteSpace: 'nowrap',
+                    backgroundColor: '#f5f5f5',
+                    borderBottom: '2px solid #d0d5dd',
+                    padding: '6px 8px',
+                  }}
+                >
+                  {label}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+
+          <TableBody>
+            {searchResults.map((row, index) => (
+              <TableRow
+                key={index}
+                hover
+                sx={{ '&:last-child td': { borderBottom: 0 } }}
+              >
+                {/* 文書番号 */}
+                <TableCell sx={{ fontSize: '12px', padding: '4px 8px' }}>
+                  {row.docNumber}
+                </TableCell>
+
+                {/* 情報種別 */}
+                <TableCell sx={{ fontSize: '12px', padding: '4px 8px' }}>
+                  {row.infoType.nameJp}
+                </TableCell>
+
+                {/* タイトル */}
+                <TableCell sx={{ fontSize: '12px', padding: '4px 8px' }}>
+                  {row.titleJp}
+                </TableCell>
+
+                {/* Rev */}
+                <TableCell sx={{ fontSize: '12px', padding: '4px 8px' }}>
+                  {row.revNumber}
+                </TableCell>
+
+                {/* 差替 */}
+                <TableCell sx={{ fontSize: '12px', padding: '4px 8px' }}>
+                  {row.internalRevNumber}
+                </TableCell>
+
+                {/* ステータス */}
+                <TableCell sx={{ padding: '4px 8px' }}>
+                  <StatusChip status={row.infoEditionStatus} />
+                </TableCell>
+
+                {/* ファイル */}
+                <TableCell sx={{ fontSize: '12px', padding: '4px 8px' }}>
+                  {row.fileTypes.flatMap((fileType) =>
+                    fileType.infoEditionFiles.map((file) => (
+                      <Box
+                        key={file.id}
+                        sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <span>•</span>
+                        {file.externalUrl ? (
+                          <a
+                            href={file.externalUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ fontSize: '12px', color: '#2563eb' }}
+                          >
+                            {file.displayFileName}
+                          </a>
+                        ) : (
+                          <span>{file.displayFileName}</span>
+                        )}
+                      </Box>
+                    ))
+                  )}
+                </TableCell>
+
+                {/* 公開先 TODO: APIレスポンスの型に合わせて修正 */}
+                <TableCell sx={{ fontSize: '12px', padding: '4px 8px' }}>
+                  -
+                </TableCell>
+
+                {/* 表示日付 */}
+                <TableCell sx={{ fontSize: '12px', padding: '4px 8px', whiteSpace: 'nowrap' }}>
+                  {row.displayDate
+                    ? new Date(row.displayDate).toLocaleDateString('ja-JP')
+                    : ''}
+                </TableCell>
+
+                {/* SL */}
+                <TableCell sx={{ fontSize: '12px', padding: '4px 8px' }}>
+                  {row.sl.name}
+                </TableCell>
+
+                {/* ECT */}
+                <TableCell sx={{ fontSize: '12px', padding: '4px 8px' }}>
+                  {row.ect.nameJp}
+                </TableCell>
+
+                {/* EAR99 */}
+                <TableCell sx={{ fontSize: '12px', padding: '4px 8px' }}>
+                  {row.ear99Flg === 1 ? '該当' : '非該当'}
+                </TableCell>
+
+                {/* 更新日時 */}
+                <TableCell sx={{ fontSize: '12px', padding: '4px 8px', whiteSpace: 'nowrap' }}>
+                  {row.updatedAt
+                    ? new Date(row.updatedAt).toLocaleString('ja-JP')
+                    : ''}
+                </TableCell>
+
+                {/* 操作 */}
+                <TableCell sx={{ padding: '4px 8px' }}>
+                  {row.infoEditionStatus.pastFlg === 1 ? (
+                    <Button
+                      size="small"
+                      variant="text"
+                      sx={{ fontSize: '12px', minWidth: 'unset', padding: '2px 6px' }}
+                    >
+                      編集
+                    </Button>
+                  ) : (
+                    <Button
+                      size="small"
+                      variant="text"
+                      sx={{ fontSize: '12px', minWidth: 'unset', padding: '2px 6px' }}
+                    >
+                      詳細
+                    </Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
+  )
+}
+
+export default SearchResultTable
