@@ -1,0 +1,32 @@
+<TableCell sx={{ fontSize: "12px", padding: "4px 8px" }}>
+  <Box
+    component="span"
+    sx={{
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      minWidth: "56px",
+      height: "20px",
+      padding: "0 8px",
+      borderRadius: "999px",
+      border: "1px solid transparent",
+      fontSize: "11px",
+      fontWeight: 700,
+      lineHeight: 1,
+      whiteSpace: "nowrap",
+      // ステータス別カラー
+      ...(row.infoEditionStatus.nameJp === "公開済" && {
+        color: "#166534",
+        background: "#EAF7EE",
+        borderColor: "#B7E0C2",
+      }),
+      ...(row.infoEditionStatus.nameJp === "一時保存" && {
+        color: "#9A6700",
+        background: "#FFF6E8",
+        borderColor: "#F1D19A",
+      }),
+    }}
+  >
+    {row.infoEditionStatus.nameJp}
+  </Box>
+</TableCell>
