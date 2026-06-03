@@ -172,16 +172,16 @@ import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 
-type SortState = { col: string; order: "asc" | "desc" } | null;
+export type SortState = { col: string; order: "asc" | "desc" } | null;
 
-type Props = {
+interface SortLabelProps {
   col: string;
   label: string;
   sort: SortState;
   onSort: (col: string) => void;
-};
+}
 
-const SortLabel = ({ col, label, sort, onSort }: Props) => (
+export const SortLabel: React.FC<SortLabelProps> = ({ col, label, sort, onSort }) => (
   <TableSortLabel
     active={sort?.col === col}
     direction={sort?.col === col ? sort.order : "asc"}
@@ -198,8 +198,6 @@ const SortLabel = ({ col, label, sort, onSort }: Props) => (
   </TableSortLabel>
 );
 
-export type { SortState };
-export default SortLabel;
 
 
 
