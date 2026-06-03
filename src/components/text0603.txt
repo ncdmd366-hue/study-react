@@ -149,6 +149,22 @@ const count = Math.ceil(searchResults.length / rowsPerPage);
   sx={{ ... }}
 />
 
+----------------------------------------------
+
+<Select
+  ...
+  MenuProps={{
+    PaperProps: {
+      sx: {
+        "& .MuiMenuItem-root": { fontSize: "12px" },
+        "& .MuiMenuItem-root.Mui-selected": {
+          backgroundColor: "#333",
+          color: "#fff",
+        },
+      },
+    },
+  }}
+>
 
 
 
