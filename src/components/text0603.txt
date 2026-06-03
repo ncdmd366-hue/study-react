@@ -181,22 +181,23 @@ interface SortLabelProps {
   onSort: (col: string) => void;
 }
 
-export const SortLabel: React.FC<SortLabelProps> = ({ col, label, sort, onSort }) => (
-  <TableSortLabel
-    active={sort?.col === col}
-    direction={sort?.col === col ? sort.order : "asc"}
-    onClick={() => onSort(col)}
-    IconComponent={
-      sort?.col === col
-        ? sort.order === "asc"
-          ? ArrowUpwardIcon
-          : ArrowDownwardIcon
-        : UnfoldMoreIcon
-    }
-  >
-    {label}
-  </TableSortLabel>
-);
+export const SortLabel: React.FC<SortLabelProps> = ({ col, label, sort, onSort }) => {
+  const isActive = sort?.col === col;
+  return (
+    <Box
+      onClick={() => onSort(col)}
+      sx={{ display: "inline-flex", alignItems: "center", cursor: "pointer" }}
+    >
+      <span style={{ color: isActive ? "#1A73E8" : "inherit" }}>{label}</span>
+      {isActive
+        ? sort!.order === "asc"
+          ? <ArrowDropUpIcon sx={{ fontSize: "18px", color: "#1A73E8" }} />
+          : <ArrowDropDownIcon sx={{ fontSize: "18px", color: "#1A73E8" }} />
+        : <SwapVertIcon sx={{ fontSize: "18px", color: "#999" }} />
+      }
+    </Box>
+  );
+};
 
 
 
