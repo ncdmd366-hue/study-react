@@ -166,6 +166,69 @@ const count = Math.ceil(searchResults.length / rowsPerPage);
   }}
 >
 
+----------------------------------------------
+import TableSortLabel from "@mui/material/TableSortLabel";
+import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+
+type SortState = { col: string; order: "asc" | "desc" } | null;
+
+type Props = {
+  col: string;
+  label: string;
+  sort: SortState;
+  onSort: (col: string) => void;
+};
+
+const SortLabel = ({ col, label, sort, onSort }: Props) => (
+  <TableSortLabel
+    active={sort?.col === col}
+    direction={sort?.col === col ? sort.order : "asc"}
+    onClick={() => onSort(col)}
+    IconComponent={
+      sort?.col === col
+        ? sort.order === "asc"
+          ? ArrowUpwardIcon
+          : ArrowDownwardIcon
+        : UnfoldMoreIcon
+    }
+  >
+    {label}
+  </TableSortLabel>
+);
+
+export type { SortState };
+export default SortLabel;
 
 
+
+
+
+import SortLabel, { SortState } from "./SortLabel";
+
+const [sort, setSort] = useState<SortState>(null);
+
+const toggle = (col: string) =>
+  setSort(s => ({ col, order: s?.col === col && s.order === "asc" ? "desc" : "asc" }));
+
+const sortedResults = sort
+  ? [...searchResults].sort((a, b) =>
+      (sort.order === "asc" ? 1 : -1) *
+      String(a[sort.col] ?? "").localeCompare(String(b[sort.col] ?? ""))
+    )
+  : searchResults;
+
+const pagedRows = sortedResults.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
+// TableHead内
+<TableCell>
+  <SortLabel col="docNumber" label="文書番号" sort={sort} onSort={toggle} />
+</TableCell>
+<TableCell>
+  <SortLabel col="displayDate" label="表示日付" sort={sort} onSort={toggle} />
+</TableCell>
+<TableCell>
+  <SortLabel col="updatedAt" label="更新日時" sort={sort} onSort={toggle} />
+</TableCell>
 
