@@ -109,6 +109,47 @@ import PaginationItem from "@mui/material/PaginationItem";
   }}
 />
 
+----------------------------------------------
+const count = Math.ceil(searchResults.length / rowsPerPage);
+
+<Pagination
+  count={count}
+  page={page + 1}
+  siblingCount={2}
+  boundaryCount={5}
+  onChange={(_, newPage) => setPage(newPage - 1)}
+  renderItem={(item) => {
+    // 末尾境界の最後のページ以外を非表示
+    if (
+      item.type === "page" &&
+      item.page > count - 5 &&
+      item.page < count &&
+      Math.abs(item.page - (page + 1)) > 2
+    ) {
+      return null;
+    }
+
+    if (item.type === "start-ellipsis")
+      return (
+        <Box component="span"
+          onClick={() => setPage((p) => Math.max(p - 5, 0))}
+          sx={{ cursor: "pointer", fontSize: "12px", height: "28px", display: "inline-flex", alignItems: "center", px: "8px" }}
+        >...</Box>
+      );
+    if (item.type === "end-ellipsis")
+      return (
+        <Box component="span"
+          onClick={() => setPage((p) => Math.min(p + 5, count - 1))}
+          sx={{ cursor: "pointer", fontSize: "12px", height: "28px", display: "inline-flex", alignItems: "center", px: "8px" }}
+        >...</Box>
+      );
+
+    return <PaginationItem {...item} />;
+  }}
+  sx={{ ... }}
+/>
+
+
 
 
 
