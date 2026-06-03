@@ -231,3 +231,51 @@ const pagedRows = sortedResults.slice(page * rowsPerPage, page * rowsPerPage + r
   <SortLabel col="updatedAt" label="更新日時" sort={sort} onSort={toggle} />
 </TableCell>
 
+---------------------------------------------
+import { Box } from "@mui/material";
+import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+
+export type SortState = { col: string; order: "asc" | "desc" } | null;
+
+interface SortLabelProps {
+  col: string;
+  label: string;
+  sort: SortState;
+  onSort: (col: string) => void;
+}
+
+const SortIcon = ({ order }: { order: "asc" | "desc" | null }) => (
+  <Box sx={{ display: "inline-flex", flexDirection: "column", ml: "2px" }}>
+    <ArrowDropUpIcon sx={{ fontSize: "14px", color: order === "asc" ? "#1A73E8" : "#bbb", mb: "-8px" }} />
+    <ArrowDropDownIcon sx={{ fontSize: "14px", color: order === "desc" ? "#1A73E8" : "#bbb" }} />
+  </Box>
+);
+
+export const SortLabel: React.FC<SortLabelProps> = ({ col, label, sort, onSort }) => {
+  const order = sort?.col === col ? sort.order : null;
+  return (
+    <Box
+      onClick={() => onSort(col)}
+      sx={{ display: "inline-flex", alignItems: "center", cursor: "pointer" }}
+    >
+      <span style={{ color: order ? "#1A73E8" : "inherit" }}>{label}</span>
+      <SortIcon order={order} />
+    </Box>
+  );
+};
+
+
+const toggle = (col: string) =>
+  setSort(s => {
+    if (s?.col !== col) return { col, order: "asc" };
+    if (s.order === "asc") return { col, order: "desc" };
+    return null;
+  });
+
+
+
+
+
+
+
