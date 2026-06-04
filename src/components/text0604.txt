@@ -185,3 +185,24 @@ const SearchPage: React.FC = () => {
   );
 };
 
+---------------------------------------------
+
+const sortedResults = sort
+  ? [...searchResults].sort((a, b) => {
+      const direction = sort.order === "asc" ? 1 : -1;
+      const aVal = a[sort.col];
+      const bVal = b[sort.col];
+
+      // 日付列はDateオブジェクトで比較
+      if (sort.col === "updatedAt" || sort.col === "displayDate") {
+        return direction * (
+          new Date(aVal ?? 0).getTime() - new Date(bVal ?? 0).getTime()
+        );
+      }
+
+      // 文字列列はそのまま
+      return direction * String(aVal ?? "").localeCompare(String(bVal ?? ""));
+    })
+  : searchResults;
+
+
