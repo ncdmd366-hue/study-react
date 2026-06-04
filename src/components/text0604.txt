@@ -77,3 +77,111 @@ INSERT INTO [dbo].[T_INFO_EDITION_FILE] (
 );
 
 SELECT '登録完了' AS result, @t_info_id AS t_info_id, @edition_id AS t_info_edition_id;
+
+-----------------------------------------------------------------------------
+
+const SearchPage: React.FC = () => {
+
+  // ①State変更
+  const [selectedStatusIds, setSelectedStatusIds] = useState<string[]>([]);
+  // ... 他のstateは既存のまま
+
+  useEffect(() => {
+    const fetchSearchConditions = async () => {
+      setLoading(true);
+      // 情報種別
+      const resInfoType = await postEDMS<InfoTypeConditionListResponse>(API_ENDPOINTS.CONDITION_INFOTYPE);
+      const infoTypeData: InfoTypeDto[] = resInfoType.infoTypes;
+
+      // ステータス
+      const resStatu = await postEDMS<InfoEditionStatusConditionListResponse>(API_ENDPOINTS.CONDITION_STATUS);
+      const statusData: InfoEditionStatusConditionDto[] = resStatu.infoEditionStatusConditions;
+
+      // SL
+      const resSl = await postEDMS<SlConditionListResponse>(API_ENDPOINTS.CONDITION_SL);
+      const slData: SlDto[] = resSl.sls;
+
+      // ECT
+      const resEct = await postEDMS<EctConditionListResponse>(API_ENDPOINTS.CONDITION_ECT);
+      const ectData: EctDto[] = resEct.ects;
+
+      setInformationTypes(infoTypeData);
+      setStatuses(statusData);
+      setSls(slData);
+      setEcts(ectData);
+
+      // ②デフォルトON（一時保存・公開済）
+      const defaultIds = statusData
+        .filter((s) => ['一時保存', '公開済'].includes(s.searchNameJp))
+        .map((s) => s.searchId);
+      setSelectedStatusIds(defaultIds);
+    };
+    fetchSearchConditions();
+  }, []);
+
+  // ③ハンドラ追加
+  const handleStatusChange = (id: string, checked: boolean) => {
+    setSelectedStatusIds((prev) =>
+      checked ? [...prev, id] : prev.filter((s) => s !== id)
+    );
+  };
+
+  // ⑥クリア処理
+  const handleClear = () => {
+    // ... 他のクリア処理は既存のまま
+    setSelectedStatusIds([]);
+  };
+
+  // ⑤リクエスト組み立て
+  const handleSearch = async () => {
+    const requestParams = {
+      // ... 他のパラメータは既存のまま
+      infoEditionStatusIds: selectedStatusIds,
+    };
+    // ... 既存のfetch処理
+  };
+
+  return (
+    <>
+      {/* ... 他のフォームフィールドは既存のまま ... */}
+
+      {/* ④行3: ステータス / 公開先（順番入替＋チェックボックス化） */}
+      <Box className="form-row" sx={{ marginBottom: 1.2 }}>
+
+        {/* ステータス（Selectから Checkboxへ変更） */}
+        <Box className="field">
+          <InputLabel className="label-title">ステータス</InputLabel>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', minHeight: '30px' }}>
+            {statuses.map((status) => (
+              <FormControlLabel
+                key={status.searchId}
+                sx={{ margin: 0 }}
+                control={
+                  <Checkbox
+                    size="small"
+                    sx={{ padding: '2px' }}
+                    checked={selectedStatusIds.includes(status.searchId)}
+                    onChange={(e) => handleStatusChange(status.searchId, e.target.checked)}
+                  />
+                }
+                label={status.searchNameJp}
+              />
+            ))}
+          </Box>
+        </Box>
+
+        {/* 公開先（既存のまま、ここへ移動） */}
+        <Box className="field">
+          <InputLabel id="publish-target-label" className="label-title">公開先</InputLabel>
+          <FormControl fullWidth size="small" variant="outlined">
+            {/* 既存の公開先Selectをそのまま */}
+          </FormControl>
+        </Box>
+
+      </Box>
+
+      {/* ... 他のフォームフィールドは既存のまま ... */}
+    </>
+  );
+};
+
