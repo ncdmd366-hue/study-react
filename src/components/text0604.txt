@@ -1,0 +1,79 @@
+USE [EDMS]
+GO
+
+-- ============================================================
+-- ★ 登録パラメータ設定欄 (ここだけ変更すればOK)
+-- ============================================================
+DECLARE @info_type_id        UNIQUEIDENTIFIER = '60FD624C-1058-F111-A135-E7592C126A3F' -- APIリクエストの infoTypeId と一致させること
+DECLARE @doc_number          VARCHAR(20)      = 'DOC-000001'
+DECLARE @title_jp            VARCHAR(100)     = 'プロジェクト別運転実績一覧_1'
+DECLARE @title_en            VARCHAR(100)     = 'projectOperator_1'
+DECLARE @status_id           VARCHAR(3)       = '200'  -- 100:一時保存 200:公開済 210:公開終了
+DECLARE @m_ect_id            INT              = 1
+DECLARE @m_sl_id             INT              = 1
+DECLARE @rev_number          INT              = 1
+DECLARE @internal_rev_number INT              = 1
+DECLARE @ear99_flg           BIT              = 0
+
+-- ファイル1 (project_en: m_file_type_id=10)
+DECLARE @file_name_en        VARCHAR(255)     = '2026_01_Fleet_data(Project)'
+DECLARE @external_url_en     VARCHAR(500)     = 'http://example.com'
+
+-- ファイル2 (project_jp: m_file_type_id=9)
+DECLARE @file_name_jp        VARCHAR(255)     = '2026年01月末_プロジェクト別GT運転実績'
+DECLARE @external_url_jp     VARCHAR(500)     = 'http://example.com'
+-- ============================================================
+
+-- ① T_INFO
+DECLARE @t_info_id UNIQUEIDENTIFIER = NEWID();
+
+INSERT INTO [dbo].[T_INFO] (
+    id, del_flg, created_by, created_at, updated_by, updated_at, m_info_type_id
+) VALUES (
+    @t_info_id, 0, 'system', GETDATE(), 'system', GETDATE(),
+    @info_type_id
+);
+
+-- ② T_INFO_EDITION
+INSERT INTO [dbo].[T_INFO_EDITION] (
+    t_info_id, doc_number, title_jp, title_en,
+    registration_date, display_date,
+    m_info_edition_status_id, m_ect_id, m_sl_id,
+    rev_number, internal_rev_number,
+    ear99_flg, del_flg,
+    created_by, created_at, updated_by, updated_at
+) VALUES (
+    @t_info_id,
+    @doc_number, @title_jp, @title_en,
+    GETDATE(), GETDATE(),
+    @status_id, @m_ect_id, @m_sl_id,
+    @rev_number, @internal_rev_number,
+    @ear99_flg, 0,
+    'system', GETDATE(), 'system', GETDATE()
+);
+
+DECLARE @edition_id INT = SCOPE_IDENTITY();
+
+-- ③ T_INFO_EDITION_FILE (project_en)
+INSERT INTO [dbo].[T_INFO_EDITION_FILE] (
+    id, internal_file_flg, display_file_name, external_url,
+    del_flg, created_by, created_at, updated_by, updated_at,
+    t_info_edition_id, m_file_type_id, t_file_id
+) VALUES (
+    NEWID(), 0, @file_name_en, @external_url_en,
+    0, 'system', GETDATE(), 'system', GETDATE(),
+    @edition_id, 10, NULL
+);
+
+-- ④ T_INFO_EDITION_FILE (project_jp)
+INSERT INTO [dbo].[T_INFO_EDITION_FILE] (
+    id, internal_file_flg, display_file_name, external_url,
+    del_flg, created_by, created_at, updated_by, updated_at,
+    t_info_edition_id, m_file_type_id, t_file_id
+) VALUES (
+    NEWID(), 0, @file_name_jp, @external_url_jp,
+    0, 'system', GETDATE(), 'system', GETDATE(),
+    @edition_id, 9, NULL
+);
+
+SELECT '登録完了' AS result, @t_info_id AS t_info_id, @edition_id AS t_info_edition_id;
