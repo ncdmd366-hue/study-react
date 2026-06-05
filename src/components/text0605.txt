@@ -79,3 +79,17 @@ SELECT
 FROM @files;
 
 SELECT '登録完了' AS result, @edition_id AS t_info_edition_id;
+
+
+
+<Box sx={{ overflow: "hidden", display: "flex", flexDirection: "column", height: "100vh" }}>
+  {/* 既存のheader Boxはそのまま */}
+  <Box sx={{ width: "1400px", margin: "0 auto", flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+    {/* 既存の中身はそのまま */}
+    <Box sx={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+      <SearchResultTable searchResults={searchResults} />
+    </Box>
+  </Box>
+</Box>
+
+
