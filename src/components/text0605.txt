@@ -2,3 +2,80 @@ grep -A 5 "updatedAtFrom" dist/doc-mng-search/dto/info-result-list-request.dto.j
 
 
 cat dist/doc-mng-search/dto/info-result-list-request.dto.js | grep -o "updatedAtFrom.*invalid"
+
+
+USE [EDMS]
+GO
+
+-- ============================================================
+-- ★ 登録パラメータ設定欄 (ここだけ変更すればOK)
+-- ============================================================
+DECLARE @info_type_id        UNIQUEIDENTIFIER = '9D26DEDF-4E53-F111-A132-D7A6458DA68E' -- APIリクエストの infoTypeId と一致させること
+DECLARE @doc_number          VARCHAR(20)      = ''
+DECLARE @title_jp            VARCHAR(100)     = ''
+DECLARE @title_en            VARCHAR(100)     = ''
+DECLARE @status_id           VARCHAR(3)       = '210'  -- 100:一時保存 200:公開済 210:公開終了
+DECLARE @m_ect_id            INT              = 3
+DECLARE @m_sl_id             INT              = 3
+DECLARE @rev_number          INT              = 0
+DECLARE @internal_rev_number INT              = 0
+DECLARE @ear99_flg           BIT              = 1
+
+-- ★ ファイル一覧 (追加・削除・変更はここだけ)
+-- m_file_type_id: 9=project_jp / 10=project_en
+DECLARE @files TABLE (
+    display_file_name VARCHAR(255),
+    external_url      VARCHAR(500),
+    m_file_type_id    INT
+);
+
+INSERT INTO @files VALUES
+    ('運転情報見える化(2025/12/04更新)_Excel', 'http://example.com', 9),  -- project_jp
+    ('2026年01月末_プロジェクト別GT運転実績',  'http://example.com', 9);  -- project_jp
+--  ('2026_01_Fleet_data(Project)',            'http://example.com', 10); -- project_en (不要ならコメントアウト)
+-- ============================================================
+
+
+-- ① T_INFO
+DECLARE @t_info_id UNIQUEIDENTIFIER = NEWID();
+
+INSERT INTO [dbo].[T_INFO] (
+    id, del_flg, created_by, created_at, updated_by, updated_at, m_info_type_id
+) VALUES (
+    @t_info_id, 0, 'system', GETDATE(), 'system', GETDATE(),
+    @info_type_id
+);
+
+-- ② T_INFO_EDITION
+INSERT INTO [dbo].[T_INFO_EDITION] (
+    t_info_id, doc_number, title_jp, title_en,
+    registration_date, display_date,
+    m_info_edition_status_id, m_ect_id, m_sl_id,
+    rev_number, internal_rev_number,
+    ear99_flg, del_flg,
+    created_by, created_at, updated_by, updated_at
+) VALUES (
+    @t_info_id,
+    @doc_number, @title_jp, @title_en,
+    GETDATE(), GETDATE(),
+    @status_id, @m_ect_id, @m_sl_id,
+    @rev_number, @internal_rev_number,
+    @ear99_flg, 0,
+    'system', GETDATE(), 'system', GETDATE()
+);
+
+DECLARE @edition_id INT = SCOPE_IDENTITY();
+
+-- ③ T_INFO_EDITION_FILE (ファイル一覧をループして全件INSERT)
+INSERT INTO [dbo].[T_INFO_EDITION_FILE] (
+    id, internal_file_flg, display_file_name, external_url,
+    del_flg, created_by, created_at, updated_by, updated_at,
+    t_info_edition_id, m_file_type_id, t_file_id
+)
+SELECT
+    NEWID(), 0, display_file_name, external_url,
+    0, 'system', GETDATE(), 'system', GETDATE(),
+    @edition_id, m_file_type_id, NULL
+FROM @files;
+
+SELECT '登録完了' AS result, @edition_id AS t_info_edition_id;
