@@ -1,1 +1,4 @@
 grep -A 5 "updatedAtFrom" dist/doc-mng-search/dto/info-result-list-request.dto.js
+
+
+cat dist/doc-mng-search/dto/info-result-list-request.dto.js | grep -o "updatedAtFrom.*invalid"
