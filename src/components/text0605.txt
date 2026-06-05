@@ -1,3 +1,27 @@
+// 検索エリアの拡張
+<Box sx={{ 
+  height: isConditionOpen 
+    ? 'calc(100vh - 480px)'   // 条件が開いている時
+    : 'calc(100vh - 160px)',  // 条件が閉じている時
+  overflow: "auto"
+}}>
+  <SearchResultTable searchResults={searchResults} />
+</Box>
+
+
+// TableHead に z-index を追加
+<TableHead sx={{ position: "sticky", zIndex: 1 }}>
+
+// ソートアイコンのサイズ調整
+<span style={{
+  fontSize: '8px',  // ← 小さくする場合
+  color: sortField === field ? '#2563eb' : '#aaa',
+}}>
+
+
+
+
+
 grep -A 5 "updatedAtFrom" dist/doc-mng-search/dto/info-result-list-request.dto.js
 
 
