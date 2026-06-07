@@ -1,0 +1,158 @@
+
+① bash を実行 → ファイルをディスクに配置
+② SQL を実行 → T_FILE にレコード登録
+③ 表示された t_file_id を汎用INSERTの @files の t_file_id に設定
+④ 汎用INSERTスクリプトを実行
+
+
+
+
+
+
+# ============================================================
+# ★ 事前準備パラメータ (ここだけ変更すればOK)
+# ============================================================
+
+# ストレージの保存先ディレクトリ (storage/release/ 以下のパス)
+STORAGE_DIR="test"
+
+# 配置するファイル名
+FILE_NAME="test.txt"
+
+# ファイルの内容 (テキストファイルの場合)
+FILE_CONTENT="test file"
+
+# ============================================================
+
+# ディレクトリ作成 & ファイル配置
+mkdir -p storage/release/${STORAGE_DIR}
+echo "${FILE_CONTENT}" > storage/release/${STORAGE_DIR}/${FILE_NAME}
+
+# 配置確認
+echo "配置先: storage/release/${STORAGE_DIR}/${FILE_NAME}"
+ls -la storage/release/${STORAGE_DIR}/
+
+
+
+
+
+USE [EDMS]
+GO
+
+-- ============================================================
+-- ★ 事前準備パラメータ (ここだけ変更すればOK)
+-- ============================================================
+
+-- T_FILE.path: storage/release/ 以下のディレクトリ名 (bashのSTORAGE_DIRと合わせること)
+DECLARE @file_path VARCHAR(255) = 'test'
+
+-- T_FILE.name: ファイル名 (bashのFILE_NAMEと合わせること)
+DECLARE @file_name VARCHAR(255) = 'test.txt'
+
+-- ============================================================
+
+-- T_FILE にレコード登録
+INSERT INTO [dbo].[T_FILE] (
+    path, name,
+    physical_del_flg, del_flg,
+    created_by, created_at, updated_by, updated_at
+) VALUES (
+    @file_path, @file_name,
+    0, 0,
+    'system', GETDATE(), 'system', GETDATE()
+);
+
+-- ★ このIDを汎用INSERTスクリプトの t_file_id に設定すること
+SELECT
+    SCOPE_IDENTITY() AS t_file_id,
+    @file_path        AS path,
+    @file_name        AS name;
+
+
+
+
+
+
+USE [EDMS]
+GO
+
+-- ============================================================
+-- ★ 登録パラメータ設定欄 (ここだけ変更すればOK)
+-- ============================================================
+DECLARE @info_type_id        UNIQUEIDENTIFIER = '60FD624C-1058-F111-A135-E7592C126A3F' -- APIリクエストの infoTypeId と一致させること
+DECLARE @doc_number          VARCHAR(20)      = 'DOC-000001'
+DECLARE @title_jp            VARCHAR(100)     = 'プロジェクト別運転実績一覧_1'
+DECLARE @title_en            VARCHAR(100)     = 'projectOperator_1'
+DECLARE @status_id           VARCHAR(3)       = '200'  -- 100:一時保存 200:公開済 210:公開終了
+DECLARE @m_ect_id            INT              = 1
+DECLARE @m_sl_id             INT              = 1
+DECLARE @rev_number          INT              = 1
+DECLARE @internal_rev_number INT              = 1
+DECLARE @ear99_flg           BIT              = 0
+
+-- ★ ファイル一覧 (追加・削除・変更はここだけ)
+-- internal_file_flg: 0=外部URL / 1=内部ファイル
+-- t_file_id        : 内部ファイルの場合はT_FILEのid / 外部URLの場合はNULL
+-- external_url     : 外部URLの場合はURL / 内部ファイルの場合はNULL
+-- m_file_type_id   : 9=project_jp / 10=project_en
+DECLARE @files TABLE (
+    display_file_name VARCHAR(255),
+    external_url      VARCHAR(500),
+    m_file_type_id    INT,
+    internal_file_flg BIT,
+    t_file_id         INT
+);
+
+INSERT INTO @files VALUES
+--  表示ファイル名                        外部URL                 fileTypeId  内部flg  T_FILEのid
+    ('test.txt',                          NULL,                   9,          1,       1),      -- 内部ファイル
+    ('2026年01月末_プロジェクト別運転実績', 'http://example.com',  9,          0,       NULL);   -- 外部URL
+--  ('2026_01_Fleet_data(Project)',        'http://example.com',  10,         0,       NULL);   -- 不要ならコメントアウト
+-- ============================================================
+
+
+-- ① T_INFO
+DECLARE @t_info_id UNIQUEIDENTIFIER = NEWID();
+
+INSERT INTO [dbo].[T_INFO] (
+    id, del_flg, created_by, created_at, updated_by, updated_at, m_info_type_id
+) VALUES (
+    @t_info_id, 0, 'system', GETDATE(), 'system', GETDATE(),
+    @info_type_id
+);
+
+-- ② T_INFO_EDITION
+INSERT INTO [dbo].[T_INFO_EDITION] (
+    t_info_id, doc_number, title_jp, title_en,
+    registration_date, display_date,
+    m_info_edition_status_id, m_ect_id, m_sl_id,
+    rev_number, internal_rev_number,
+    ear99_flg, del_flg,
+    created_by, created_at, updated_by, updated_at
+) VALUES (
+    @t_info_id,
+    @doc_number, @title_jp, @title_en,
+    GETDATE(), GETDATE(),
+    @status_id, @m_ect_id, @m_sl_id,
+    @rev_number, @internal_rev_number,
+    @ear99_flg, 0,
+    'system', GETDATE(), 'system', GETDATE()
+);
+
+DECLARE @edition_id INT = SCOPE_IDENTITY();
+
+-- ③ T_INFO_EDITION_FILE (ファイル一覧を一括INSERT)
+INSERT INTO [dbo].[T_INFO_EDITION_FILE] (
+    id, internal_file_flg, display_file_name, external_url,
+    del_flg, created_by, created_at, updated_by, updated_at,
+    t_info_edition_id, m_file_type_id, t_file_id
+)
+SELECT
+    NEWID(), internal_file_flg, display_file_name, external_url,
+    0, 'system', GETDATE(), 'system', GETDATE(),
+    @edition_id, m_file_type_id, t_file_id
+FROM @files;
+
+SELECT '登録完了' AS result, @edition_id AS t_info_edition_id;
+
+
