@@ -1,3 +1,9 @@
+update判断基準
+f.internal_file_flg,  -- 0=外部URL / 1=内部ファイル
+    f.t_file_id,          -- NULLなら内部ファイル未設定
+
+
+
 SELECT
     f.id,
     f.display_file_name,
@@ -7,3 +13,60 @@ SELECT
 FROM [dbo].[T_INFO_EDITION_FILE] f
 JOIN [dbo].[T_INFO_EDITION] e ON e.id = f.t_info_edition_id
 ORDER BY e.created_at DESC;
+
+
+① bash でファイル配置
+② T_FILE INSERT → t_file_id を控える
+③ T_INFO_EDITION_FILE UPDATE → t_file_id を設定
+④ APIでダウンロード確認
+
+1、
+mkdir -p storage/release/test
+echo "test file" > storage/release/test/test.txt
+
+
+2、
+USE [EDMS]
+GO
+
+DECLARE @file_path VARCHAR(255) = 'test'
+DECLARE @file_name VARCHAR(255) = 'test.txt'
+
+INSERT INTO [dbo].[T_FILE] (
+    path, name, physical_del_flg, del_flg,
+    created_by, created_at, updated_by, updated_at
+) VALUES (
+    @file_path, @file_name, 0, 0,
+    'system', GETDATE(), 'system', GETDATE()
+);
+
+-- ★ このIDを次のUPDATEの @t_file_id に設定すること
+SELECT SCOPE_IDENTITY() AS t_file_id;
+
+
+USE [EDMS]
+GO
+
+-- ============================================================
+-- ★ UPDATEパラメータ (ここだけ変更すればOK)
+-- ============================================================
+DECLARE @target_file_id UNIQUEIDENTIFIER = 'ここに対象のUUID' -- ②のSELECTで確認したid
+DECLARE @t_file_id      INT              = 1                  -- ②で取得したt_file_id
+-- ============================================================
+
+UPDATE [dbo].[T_INFO_EDITION_FILE]
+SET
+    internal_file_flg = 1,
+    t_file_id         = @t_file_id,
+    external_url      = NULL
+WHERE id = @target_file_id;
+
+-- 確認
+SELECT id, display_file_name, internal_file_flg, t_file_id
+FROM [dbo].[T_INFO_EDITION_FILE]
+WHERE id = @target_file_id;
+
+
+
+
+
