@@ -141,4 +141,38 @@ WHERE display_file_name LIKE '%運転情報見える化%';
 
 
 
+10:36
+
+USE [EDMS]
+GO
+
+-- Excel (3件)
+UPDATE [dbo].[T_INFO_EDITION_FILE]
+SET internal_file_flg = 1, t_file_id = 1, external_url = NULL
+WHERE id IN (
+    '881BBEA5-9E2A-4891-ABEA-01AF5AD0F65B',
+    '747DB1AE-F420-4086-9D5D-18F69A6FEE72',
+    'EBD1C56B-67D1-45D4-8237-1F6E2CD6185B'
+);
+
+-- PowerBI (3件)
+UPDATE [dbo].[T_INFO_EDITION_FILE]
+SET internal_file_flg = 1, t_file_id = 2, external_url = NULL
+WHERE id IN (
+    'C381026F-C3F2-4A7C-8ED6-AA6B51E6D52E',
+    'D9D0DD44-369B-4F5B-880D-BD94BA189503',
+    '9111C949-CF30-4CE7-87DF-F4BF3F3AA194'
+);
+
+-- 確認
+SELECT id, display_file_name, internal_file_flg, t_file_id
+FROM [dbo].[T_INFO_EDITION_FILE]
+WHERE display_file_name LIKE '%運転情報見える化%';
+
+
+
+
+
+
+
 
