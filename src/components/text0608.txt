@@ -29,6 +29,27 @@ describe('MessageSnackbar', () => {
 
     expect(onClose).toHaveBeenCalled();
   });
+it('snackbar-closeクリックでonCloseが呼ばれること', async () => {
+  const user = userEvent.setup();
+  const onClose = vi.fn();
+
+  render(
+    <MessageSnackbar
+      open={true}
+      message="テスト"
+      severity="error"
+      onClose={onClose}
+    />
+  );
+
+  await user.click(screen.getByTestId('snackbar-close'));
+
+  expect(onClose).toHaveBeenCalledWith(
+    expect.anything(),
+    'close'
+  );
+});
+
 });
 
 
