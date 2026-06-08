@@ -1,10 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
-import MessageSnackbar from '../src/components/messageSnackbar';
-
 describe('MessageSnackbar', () => {
-  it('Alert の onClose 経由で handleClose が呼ばれること', async () => {
+  it('Alert の×ボタンで handleClose が呼ばれること', async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
 
@@ -17,35 +12,15 @@ describe('MessageSnackbar', () => {
       />
     );
 
-    // MUI Alert は onClose prop があると内部に×ボタンを描画する
-    // aria-label="Close" でそのボタンを取得
-    const alertCloseBtn = screen.getByTitle('Close');
-    // または↓
-    // const alertCloseBtn = screen.getAllByRole('button')[0];
-    await user.click(alertCloseBtn);
+    // MUI Alert が onClose prop を受け取ると内部に×ボタンを描画する
+    const buttons = screen.getAllByRole('button');
+    // buttons[0] = Alert内部の×ボタン（handleClose が渡されている）
+    await user.click(buttons[0]);
 
-    // handleClose → onClose?.(event, reason) が呼ばれることを確認
     expect(onClose).toHaveBeenCalled();
   });
-
-  it('clickaway では onClose が呼ばれないこと', () => {
-    // v8 ignore next 3 の対象なのでテスト不要だが
-    // handleClose の呼び出し自体はカバーしたい場合：
-    // Snackbar の onClose を直接呼び出す
-    const onClose = vi.fn();
-    const { rerender } = render(
-      <MessageSnackbar
-        open={true}
-        message="テスト"
-        severity="info"
-        onClose={onClose}
-      />
-    );
-    // autoHideDuration でタイムアウトさせるか、
-    // Snackbar の onClose prop を直接テストする場合は
-    // act + fake timers を使う
-  });
 });
+
 
 
 
