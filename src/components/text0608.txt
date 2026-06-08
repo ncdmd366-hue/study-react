@@ -1,3 +1,57 @@
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import MessageSnackbar from '../src/components/messageSnackbar';
+
+describe('MessageSnackbar', () => {
+
+  // L46: IconButton の onClick をカバー
+  it('closeボタンクリックでonCloseが呼ばれること', async () => {
+    const user = userEvent.setup();
+    const handleClose = vi.fn();
+
+    render(
+      <MessageSnackbar
+        open={true}
+        message="テスト"
+        severity="error"
+        onClose={handleClose}
+      />
+    );
+
+    // aria-label="close" でIconButtonを取得してクリック
+    await user.click(screen.getByRole('button', { name: 'close' }));
+
+    expect(handleClose).toHaveBeenCalledWith(
+      expect.anything(),
+      'close'
+    );
+  });
+
+  // L24: handleClose（Snackbar/Alert の onClose 経由）をカバー
+  it('Alert の onClose 経由で handleClose が呼ばれること', async () => {
+    const user = userEvent.setup();
+    const handleClose = vi.fn();
+
+    render(
+      <MessageSnackbar
+        open={true}
+        message="テスト"
+        severity="error"
+        onClose={handleClose}
+      />
+    );
+
+    // MUI Alert が内部レンダリングする閉じるボタン
+    // (onClose prop を渡すと Alert が×ボタンを描画する)
+    const closeButtons = screen.getAllByRole('button');
+    // Alert内部の閉じるボタン（index 0）をクリック
+    await user.click(closeButtons[0]);
+
+    expect(handleClose).toHaveBeenCalled();
+  });
+});
+
+data-testid="snackbar-close"
 
 0609
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
