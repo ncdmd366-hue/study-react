@@ -1,0 +1,9 @@
+SELECT
+    f.id,
+    f.display_file_name,
+    f.internal_file_flg,  -- 0=外部URL / 1=内部ファイル
+    f.t_file_id,          -- NULLなら内部ファイル未設定
+    f.external_url
+FROM [dbo].[T_INFO_EDITION_FILE] f
+JOIN [dbo].[T_INFO_EDITION] e ON e.id = f.t_info_edition_id
+ORDER BY e.created_at DESC;
