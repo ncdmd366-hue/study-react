@@ -106,6 +106,39 @@ SELECT
 
 
 
+t_file_id_excel=1, t_file_id_pbi=2 確認！
+③ T_INFO_EDITION_FILE をUPDATE
+
+USE [EDMS]
+GO
+
+-- ファイル名でExcel/PowerBIを判定して一括UPDATE
+UPDATE [dbo].[T_INFO_EDITION_FILE]
+SET
+    internal_file_flg = 1,
+    external_url      = NULL,
+    t_file_id = CASE
+        WHEN display_file_name LIKE '%Excel%'   THEN 1  -- t_file_id_excel
+        WHEN display_file_name LIKE '%PowerBI%' THEN 2  -- t_file_id_pbi
+    END
+WHERE
+    internal_file_flg = 0
+    AND external_url IS NULL
+    AND display_file_name LIKE '%運転情報見える化%';
+
+-- 更新確認
+SELECT
+    id,
+    display_file_name,
+    internal_file_flg,
+    t_file_id,
+    external_url
+FROM [dbo].[T_INFO_EDITION_FILE]
+WHERE display_file_name LIKE '%運転情報見える化%';
+
+
+
+
 
 
 
