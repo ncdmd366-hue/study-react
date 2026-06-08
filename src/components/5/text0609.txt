@@ -1,3 +1,22 @@
+-- ★ ここに登録完了時に表示された t_info_id を貼る
+DECLARE @t_info_id UNIQUEIDENTIFIER = '---- ここに貼る ----'
+
+-- 子から順に削除
+DELETE FROM [dbo].[T_INFO_EDITION_FILE]
+WHERE t_info_edition_id IN (
+    SELECT id FROM [dbo].[T_INFO_EDITION]
+    WHERE t_info_id = @t_info_id
+)
+
+DELETE FROM [dbo].[T_INFO_EDITION]
+WHERE t_info_id = @t_info_id
+
+DELETE FROM [dbo].[T_INFO]
+WHERE id = @t_info_id
+
+
+
+
 – =====================================================
 – ★ 登録パラメータ設定欄（ここだけ変更すればOK）
 – =====================================================
