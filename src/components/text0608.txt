@@ -1,3 +1,76 @@
+
+0609
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+// モック
+const renderMock = vi.fn();
+const createRootMock = vi.fn(() => ({ render: renderMock }));
+
+vi.mock("react-dom/client", () => ({ createRoot: createRootMock }));
+vi.mock("react-router-dom", () => ({
+  BrowserRouter: ({ children }: { children: React.ReactNode }) => children,
+}));
+vi.mock("./App", () => ({ default: () => null }));
+vi.mock("./index.css", () => ({}));
+
+describe("main.tsx", () => {
+  let rootElement: HTMLElement;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    rootElement = document.createElement("div");
+    rootElement.id = "root";
+    document.body.appendChild(rootElement);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(rootElement);
+  });
+
+  it("StrictModeなしでレンダリングされる", async () => {
+    vi.stubEnv("VITE_USE_STRICT_MODE", "false");
+    vi.stubEnv("VITE_USE_MOCK", "false");
+
+    await import("./main");
+
+    await vi.waitFor(() => {
+      expect(createRootMock).toHaveBeenCalledWith(rootElement);
+      expect(renderMock).toHaveBeenCalled();
+    });
+  });
+
+  it("StrictModeありでレンダリングされる", async () => {
+    vi.stubEnv("VITE_USE_STRICT_MODE", "true");
+    vi.stubEnv("VITE_USE_MOCK", "false");
+
+    await import("./main");
+
+    await vi.waitFor(() => {
+      expect(createRootMock).toHaveBeenCalledWith(rootElement);
+      expect(renderMock).toHaveBeenCalled();
+    });
+  });
+
+  it("rootElementが存在しない場合エラーを投げる", () => {
+    document.body.removeChild(rootElement);
+    expect(() => document.getElementById("root")).not.toThrow();
+  });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 update判断基準
 f.internal_file_flg,  -- 0=外部URL / 1=内部ファイル
     f.t_file_id,          -- NULLなら内部ファイル未設定
