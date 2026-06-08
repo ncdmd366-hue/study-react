@@ -70,3 +70,42 @@ WHERE id = @target_file_id;
 
 
 
+
+
+
+10:18
+
+USE [EDMS]
+GO
+
+-- Excelファイル
+INSERT INTO [dbo].[T_FILE] (
+    path, name, physical_del_flg, del_flg,
+    created_by, created_at, updated_by, updated_at
+) VALUES (
+    'test/operation_info/excel',
+    '運転情報見える化(20251204更新)_Excel.xlsx',
+    0, 0, 'system', GETDATE(), 'system', GETDATE()
+);
+DECLARE @t_file_id_excel INT = SCOPE_IDENTITY();
+
+-- PowerBIファイル
+INSERT INTO [dbo].[T_FILE] (
+    path, name, physical_del_flg, del_flg,
+    created_by, created_at, updated_by, updated_at
+) VALUES (
+    'test/operation_info/pbi',
+    '運転情報見える化(20251204更新)_PowerBI.pbix',
+    0, 0, 'system', GETDATE(), 'system', GETDATE()
+);
+DECLARE @t_file_id_pbi INT = SCOPE_IDENTITY();
+
+SELECT
+    @t_file_id_excel AS t_file_id_excel,
+    @t_file_id_pbi   AS t_file_id_pbi;
+
+
+
+
+
+
