@@ -1,6 +1,15 @@
+import { render } from '@testing-library/react';
+import { act } from '@testing-library/react'; // reactではなくtesting-libraryから
+import { vi, describe, it, expect, afterEach } from 'vitest';
+import MessageSnackbar from '../src/components/messageSnackbar';
+
 describe('MessageSnackbar', () => {
-  it('Alert の×ボタンで handleClose が呼ばれること', async () => {
-    const user = userEvent.setup();
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('autoHideDuration後にhandleCloseが呼ばれること', async () => {
+    vi.useFakeTimers();
     const onClose = vi.fn();
 
     render(
@@ -9,19 +18,18 @@ describe('MessageSnackbar', () => {
         message="テスト"
         severity="error"
         onClose={onClose}
+        autoHideDuration={1000}
       />
     );
 
-    // MUI Alert が onClose prop を受け取ると内部に×ボタンを描画する
-    const buttons = screen.getAllByRole('button');
-    // buttons[0] = Alert内部の×ボタン（handleClose が渡されている）
-    await user.click(buttons[0]);
+    // async act + runAllTimers でMUI内部タイマーを確実に発火
+    await act(async () => {
+      vi.runAllTimers();
+    });
 
     expect(onClose).toHaveBeenCalled();
   });
 });
-
-
 
 
 import { render, screen } from '@testing-library/react';
