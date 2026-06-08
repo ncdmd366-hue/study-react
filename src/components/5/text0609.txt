@@ -16,56 +16,51 @@ WHERE id = @t_info_id
 
 
 
-
-– =====================================================
-– ★ 登録パラメータ設定欄（ここだけ変更すればOK）
-– =====================================================
+-- =====================================================
+-- ★ 登録パラメータ設定欄（ここだけ変更すればOK）
+-- =====================================================
 USE [EDMS]
 GO
-
-DECLARE @info_type_id         UNIQUEIDENTIFIER = ‘60FD624C-1058-F111-A135-E7592C126A3F’ – M_INFO_TYPEのid
-DECLARE @doc_number           VARCHAR(20)      = ‘DOC-000001’
-DECLARE @title_jp             VARCHAR(100)     = ‘プロジェクト別運転実績一覧_1’
-DECLARE @title_en             VARCHAR(100)     = ‘projectOperator_1’
-DECLARE @status_id            VARCHAR(3)       = ‘200’  – 100:一時保存 200:公開済 210:公開終了
-DECLARE @m_ect_id             INT              = 1
-DECLARE @m_sl_id              INT              = 1
-DECLARE @ear99_flg            BIT              = 0
-
-– ★ ファイル一覧
-– internal_file_flg: 0=外部URL / 1=内部ファイル
-– t_file_id        : 内部ファイルの場合はT_FILEのid / 外部URLの場合はNULL
-– external_url     : 外部URLの場合はURL / 内部ファイルの場合はNULL
-– m_file_type_id   : 9=project_jp / 10=project_en
+DECLARE @info_type_id UNIQUEIDENTIFIER = '60FD624C-1058-F111-A135-E7592C126A3F' -- M_
+DECLARE @doc_number VARCHAR(20) = 'DOC-000001'
+DECLARE @title_jp VARCHAR(100) = 'プロジェクト別運転実績一覧_1'
+DECLARE @title_en VARCHAR(100) = 'projectOperator_1'
+DECLARE @status_id VARCHAR(3) = '200' -- 100:一時保存 200:公開済 210:公開終了
+DECLARE @m_ect_id INT = 1
+DECLARE @m_sl_id INT = 1
+DECLARE @ear99_flg BIT = 0
+-- ★ ファイル一覧
+-- internal_file_flg: 0=外部URL / 1=内部ファイル
+-- t_file_id : 内部ファイルの場合はT_FILEのid / 外部URLの場合はNULL
+-- external_url : 外部URLの場合はURL / 内部ファイルの場合はNULL
+-- m_file_type_id : 9=project_jp / 10=project_en
 DECLARE @files TABLE (
 display_file_name VARCHAR(255),
-external_url      VARCHAR(500),
-m_file_type_id    INT,
+external_url VARCHAR(500),
+m_file_type_id INT,
 internal_file_flg BIT,
-t_file_id         INT
+t_file_id INT
 );
-
 INSERT INTO @files VALUES
-– 表示ファイル名                        外部URL                   fileTypeId 内部flg T_FILEのid
-(‘test.txt’,                          NULL,                     9,         1,      1),  – 内部ファイル
-(‘2026年01月末_プロジェクト別運転実績’, ‘http://example.com’,     9,         0,      NULL); – 外部URL
-– (‘2026_01_Fleet_data(Project)’,         ‘http://example.com’,     10,        0,      NULL); – 不要ならコメントアウト
-
-– =====================================================
-– T_INFO（1件のみ：3エディションで共有）
-– =====================================================
+-- 表示ファイル名 外部URL fileTypeId 内部flg T_FILEのid
+('test.txt', NULL, 9, 1, ('2026年01月末
+プロジェクト別運転実績', 'http://example.com', 9, 0, NULL); --
+_
+-- ('2026_01_Fleet_data(Project)', 'http://example.com', 10, 0, 1), -
+NULL)
+-- =====================================================
+-- T_INFO（1件のみ：3エディションで共有）
+-- =====================================================
 DECLARE @t_info_id UNIQUEIDENTIFIER = NEWID();
-
 INSERT INTO [dbo].[T_INFO] (
 id, del_flg, created_by, created_at, updated_by, updated_at, m_info_type_id
 ) VALUES (
-@t_info_id, 0, ‘system’, GETDATE(), ‘system’, GETDATE(),
+@t_info_id, 0, 'system', GETDATE(), 'system', GETDATE(),
 @info_type_id
 );
-
-– =====================================================
-– T_INFO_EDITION ① rev=1, internal=1（古い → 表示されないはず）
-– =====================================================
+-- =====================================================
+-- T_INFO_EDITION ① rev=1, internal=1（古い → 表示されないはず）
+-- =====================================================
 INSERT INTO [dbo].[T_INFO_EDITION] (
 t_info_id, doc_number, title_jp, title_en,
 registration_date, display_date,
@@ -80,11 +75,9 @@ GETDATE(), GETDATE(),
 @status_id, @m_ect_id, @m_sl_id,
 1, 1,
 @ear99_flg, 0,
-‘system’, GETDATE(), ‘system’, GETDATE()
+'system', GETDATE(), 'system', GETDATE()
 );
-
 DECLARE @edition_id_1 INT = SCOPE_IDENTITY();
-
 INSERT INTO [dbo].[T_INFO_EDITION_FILE] (
 id, internal_file_flg, display_file_name, external_url,
 del_flg, created_by, created_at, updated_by, updated_at,
@@ -92,13 +85,12 @@ t_info_edition_id, m_file_type_id, t_file_id
 )
 SELECT
 NEWID(), internal_file_flg, display_file_name, external_url,
-0, ‘system’, GETDATE(), ‘system’, GETDATE(),
+0, 'system', GETDATE(), 'system', GETDATE(),
 @edition_id_1, m_file_type_id, t_file_id
 FROM @files;
-
-– =====================================================
-– T_INFO_EDITION ② rev=2, internal=1（古い → 表示されないはず）
-– =====================================================
+-- =====================================================
+-- T_INFO_EDITION ② rev=2, internal=1（古い → 表示されないはず）
+-- =====================================================
 INSERT INTO [dbo].[T_INFO_EDITION] (
 t_info_id, doc_number, title_jp, title_en,
 registration_date, display_date,
@@ -113,11 +105,9 @@ GETDATE(), GETDATE(),
 @status_id, @m_ect_id, @m_sl_id,
 2, 1,
 @ear99_flg, 0,
-‘system’, GETDATE(), ‘system’, GETDATE()
+'system', GETDATE(), 'system', GETDATE()
 );
-
 DECLARE @edition_id_2 INT = SCOPE_IDENTITY();
-
 INSERT INTO [dbo].[T_INFO_EDITION_FILE] (
 id, internal_file_flg, display_file_name, external_url,
 del_flg, created_by, created_at, updated_by, updated_at,
@@ -125,13 +115,12 @@ t_info_edition_id, m_file_type_id, t_file_id
 )
 SELECT
 NEWID(), internal_file_flg, display_file_name, external_url,
-0, ‘system’, GETDATE(), ‘system’, GETDATE(),
+0, 'system', GETDATE(), 'system', GETDATE(),
 @edition_id_2, m_file_type_id, t_file_id
 FROM @files;
-
-– =====================================================
-– T_INFO_EDITION ③ rev=2, internal=3（最新 → これだけ表示されるはず）
-– =====================================================
+-- =====================================================
+-- T_INFO_EDITION ③ rev=2, internal=3（最新 → これだけ表示されるはず）
+-- =====================================================
 INSERT INTO [dbo].[T_INFO_EDITION] (
 t_info_id, doc_number, title_jp, title_en,
 registration_date, display_date,
@@ -146,11 +135,9 @@ GETDATE(), GETDATE(),
 @status_id, @m_ect_id, @m_sl_id,
 2, 3,
 @ear99_flg, 0,
-‘system’, GETDATE(), ‘system’, GETDATE()
+'system', GETDATE(), 'system', GETDATE()
 );
-
 DECLARE @edition_id_3 INT = SCOPE_IDENTITY();
-
 INSERT INTO [dbo].[T_INFO_EDITION_FILE] (
 id, internal_file_flg, display_file_name, external_url,
 del_flg, created_by, created_at, updated_by, updated_at,
@@ -158,14 +145,13 @@ t_info_edition_id, m_file_type_id, t_file_id
 )
 SELECT
 NEWID(), internal_file_flg, display_file_name, external_url,
-0, ‘system’, GETDATE(), ‘system’, GETDATE(),
+0, 'system', GETDATE(), 'system', GETDATE(),
 @edition_id_3, m_file_type_id, t_file_id
 FROM @files;
-
-– =====================================================
-– 登録確認
-– =====================================================
-SELECT ‘登録完了’ AS result,
+-- =====================================================
+-- 登録確認
+-- =====================================================
+SELECT '登録完了' AS result,
 @edition_id_1 AS edition_id_rev1_internal1,
 @edition_id_2 AS edition_id_rev2_internal1,
 @edition_id_3 AS edition_id_rev2_internal3;
