@@ -1,3 +1,9 @@
+{`${safeResults.length === 0 ? 0 : page * rowsPerPage + 1}
+  -${Math.min((page + 1) * rowsPerPage, safeResults.length)} 件
+  / 全 ${safeResults.length} 件`}
+
+
+
 import { render } from '@testing-library/react';
 import { act } from '@testing-library/react'; // reactではなくtesting-libraryから
 import { vi, describe, it, expect, afterEach } from 'vitest';
