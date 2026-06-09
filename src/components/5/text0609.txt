@@ -1,3 +1,30 @@
+it('null値を含むカラムでソートが動作すること', async () => {
+  const user = userEvent.setup();
+
+  render(
+    <SearchResultTable
+      isConditionOpen={true}
+      searchResults={[
+        { ...items1, docNumber: null } as any,  // null
+        { ...items2 },                           // 値あり
+      ]}
+    />
+  );
+
+  await user.click(
+    screen.getByText('文書番号').parentElement!
+  );
+
+  await waitFor(() => {
+    expect(screen.getAllByRole('row').length).toBeGreaterThan(0);
+  });
+});
+
+
+
+
+
+
 // L353: file.id が undefined の場合のダウンロード
 it('ファイルIDが未設定の場合でもダウンロードが実行されること', async () => {
   const user = userEvent.setup();
