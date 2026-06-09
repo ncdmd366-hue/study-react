@@ -5,26 +5,50 @@ const STATUS_ID = {
   CLOSED: '210',     // 公開終了
 } as const;
 
-// ヘルパー関数（コンポーネント外に定義）
-const getRowBackground = (statusId: string) => {
+// src/utils/statusUtils.ts
+
+/**
+ * EAR99該当フラグの表示名を返す
+ * @param flg - EAR99該当フラグ（0: 非該当, 1: 該当）
+ * @returns 表示名
+ */
+export const getEar99Label = (flg: number): string => {
+  return ear99Data.find((d) => d.id === flg)?.name ?? '';
+};
+
+/**
+ * ステータスIDに対応するテーブル行の背景色を返す
+ * @param statusId - 情報版ステータスID
+ * @returns 背景色のカラーコード
+ */
+export const getRowBackground = (statusId: string): string => {
   if (statusId === STATUS_ID.DRAFT)  return '#FFFDF2';
   if (statusId === STATUS_ID.CLOSED) return '#F3F4F6';
   return 'transparent';
 };
 
-const getRowHoverBackground = (statusId: string) => {
+/**
+ * ステータスIDに対応するテーブル行のホバー背景色を返す
+ * @param statusId - 情報版ステータスID
+ * @returns ホバー時の背景色のカラーコード
+ */
+export const getRowHoverBackground = (statusId: string): string => {
   if (statusId === STATUS_ID.DRAFT)  return '#FFF8E1';
   if (statusId === STATUS_ID.CLOSED) return '#E5E7EB';
   return '#F7FBFF';
 };
 
-const getBadgeStyle = (statusId: string) => {
+/**
+ * ステータスIDに対応するバッジのスタイルを返す
+ * @param statusId - 情報版ステータスID
+ * @returns バッジのスタイルオブジェクト（color, background, borderColor）
+ */
+export const getBadgeStyle = (statusId: string) => {
   if (statusId === STATUS_ID.PUBLISHED) return { color: '#166534', background: '#EAF7EE', borderColor: '#B7E0C2' };
   if (statusId === STATUS_ID.DRAFT)     return { color: '#9A6700', background: '#FFF6E8', borderColor: '#F1D19A' };
   if (statusId === STATUS_ID.CLOSED)    return { color: '#475467', background: '#F3F4F6', borderColor: '#D0D5DA' };
   return {};
 };
-
 
 
 
