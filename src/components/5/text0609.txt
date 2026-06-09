@@ -1,3 +1,17 @@
+if (sort.col === "updatedAt" || sort.col === "displayDate") {
+  const aTime = aVal ? new Date(aVal as string).getTime() : 0;
+  const bTime = bVal ? new Date(bVal as string).getTime() : 0;
+  return direction * (aTime - bTime);
+}
+
+
+
+
+
+
+
+
+
 -- ★ ここに登録完了時に表示された t_info_id を貼る
 DECLARE @t_info_id UNIQUEIDENTIFIER = '---- ここに貼る ----'
 
