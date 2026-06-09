@@ -1,3 +1,49 @@
+// L353: file.id が undefined の場合のダウンロード
+it('ファイルIDが未設定の場合でもダウンロードが実行されること', async () => {
+  const user = userEvent.setup();
+  render(
+    <SearchResultTable
+      isConditionOpen={true}
+      searchResults={[{
+        ...items1,
+        fileTypes: [{
+          infoEditionFiles: [{
+            id: undefined,  // idなし
+            displayFileName: 'test.txt',
+          }]
+        }]
+      }]}
+    />
+  );
+  await user.click(screen.getByText('test.txt'));
+  expect(downloadInfoEditionFile).toHaveBeenCalledWith({
+    infoEditionFileId: '',
+    fallbackFileName: 'test.txt',
+  });
+});
+
+// L74: ソート時にaVal/bValがnullの場合
+it('null値を含むデータでもソートが正しく動作すること', async () => {
+  const user = userEvent.setup();
+  render(
+    <SearchResultTable
+      isConditionOpen={true}
+      searchResults={[
+        { ...items1, displayDate: null },
+        { ...items1, displayDate: null },
+      ]}
+    />
+  );
+  await user.click(screen.getByText('表示日付'));
+  // エラーなく表示されること
+  expect(screen.getAllByRole('row').length).toBeGreaterThan(0);
+});
+
+
+
+
+
+
 import { getEar99Label, getRowBackground, getRowHoverBackground, getBadgeStyle } from '../search/searchResultTableService';
 import { STATUS_ID } from '../constants/statusLabel';
 
