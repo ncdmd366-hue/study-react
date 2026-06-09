@@ -1,3 +1,38 @@
+import { getEar99Label, getRowBackground, getRowHoverBackground, getBadgeStyle } from '../search/searchResultTableService';
+import { STATUS_ID } from '../constants/statusLabel';
+
+describe('searchResultTableService', () => {
+
+  it('getEar99Label: 該当/非該当を返すこと', () => {
+    expect(getEar99Label(0)).toBe('非該当');
+    expect(getEar99Label(1)).toBe('該当');
+  });
+
+  it('getRowBackground: ステータスに対応する背景色を返すこと', () => {
+    expect(getRowBackground(STATUS_ID.DRAFT)).toBe('#FFFDF2');
+    expect(getRowBackground(STATUS_ID.ENDED)).toBe('#F3F4F6');
+    expect(getRowBackground(STATUS_ID.PUBLISHED)).toBe('transparent'); // L19カバー
+  });
+
+  it('getRowHoverBackground: ステータスに対応するホバー色を返すこと', () => {
+    expect(getRowHoverBackground(STATUS_ID.DRAFT)).toBe('#FFF8E1');
+    expect(getRowHoverBackground(STATUS_ID.ENDED)).toBe('#E5E7EB');
+    expect(getRowHoverBackground(STATUS_ID.PUBLISHED)).toBe('#F7FBFF'); // L29カバー
+  });
+
+  it('getBadgeStyle: ステータスに対応するスタイルを返すこと', () => {
+    expect(getBadgeStyle(STATUS_ID.PUBLISHED)).toEqual({ color: '#166534', background: '#EAF7EE', borderColor: '#B7E0C2' });
+    expect(getBadgeStyle(STATUS_ID.DRAFT)).toEqual({ color: '#9A6700', background: '#FFF6E8', borderColor: '#F1D19A' });
+    expect(getBadgeStyle(STATUS_ID.ENDED)).toEqual({ color: '#475467', background: '#F3F4F6', borderColor: '#D0D5DA' }); // L41-43カバー
+  });
+});
+
+
+
+
+
+
+
     "&::-webkit-scrollbar": {
       width: "8px",
       height: "8px",
