@@ -2,3 +2,26 @@
 beforeEach(() => {
   window.HTMLElement.prototype.scrollTo = vi.fn();
 });
+
+
+it("ページ変更時にonChangeが実行されること", async () => {
+  const user = userEvent.setup();
+
+  // containerRef の scrollTo をモック
+  window.HTMLElement.prototype.scrollTo = vi.fn();
+
+  render(
+    <SearchResultTable
+      isConditionOpen={true}
+      searchResults={[...Array(200)].map((_, i) => ({
+        ...items1,
+        docNumber: `DOC-${i}`,
+      }))}
+    />
+  );
+
+  await user.click(screen.getByTestId("mock-pagination"));
+
+  expect(window.HTMLElement.prototype.scrollTo).toHaveBeenCalled();
+});
+
