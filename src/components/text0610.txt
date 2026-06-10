@@ -1,0 +1,4 @@
+// テストファイルの先頭またはbeforeEachに追加
+beforeEach(() => {
+  window.HTMLElement.prototype.scrollTo = vi.fn();
+});
