@@ -1,0 +1,53 @@
+import { http, HttpResponse } from 'msw';
+import { API_ENDPOINTS } from '../constants/api';
+
+const base_url = import.meta.env.VITE_EDMS_API_BASE_URL;
+
+export const detailInfoHandlers = [
+  http.post(base_url + API_ENDPOINTS.DETAIL_INFO, () => {
+    return HttpResponse.json({
+      infoTypeId: '88A34806-D258-F111-A135-E7592C126A3F', // 水平展開フォロー会議議事録
+      docNumber: 'AQGT26-0081',
+      revNumber: 0,
+      internalRevNumber: 0,
+      titleJp: '26/04/09 アベイラビリティーミーティング資料(04/09分)',
+      titleEn: '26/04/09 Availability Meeting Materials (for 04/09)',
+      slId: 3,
+      ectId: 2,
+      ear99Flg: 0,
+      displayDate: '2026/04/27',
+      status: {
+        id: '100',
+        nameJp: '公開済',
+        nameEn: 'status A',
+      },
+      viewCount: 1023,
+      remarksJp: 'フレームアイレス化水平展開方針について',
+      createdAt: '2026/04/27 00:00:00',
+      updatedAt: '2026/04/27 00:00:00',
+    });
+  }),
+];
+
+
+
+
+import type { InfoEditionStatus } from './infoEditionStatus'; // ※実際のパスに合わせる
+
+export type InfoDetailResponse = {
+  infoTypeId: string;
+  docNumber: string;
+  revNumber: number;
+  internalRevNumber: number;
+  titleJp: string;
+  titleEn: string;
+  slId: number;
+  ectId: number;
+  ear99Flg: number;
+  displayDate: string;
+  status: InfoEditionStatus;
+  viewCount: number;
+  remarksJp: string;
+  createdAt: string;
+  updatedAt: string;
+};
