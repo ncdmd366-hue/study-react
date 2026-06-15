@@ -1,3 +1,30 @@
+
+// 詳細モードのとき、登録済みデータを取得して流し込む
+if (isDetailMode) {
+  const detail = await postEDMS<InfoDetailResponse>(
+    API_ENDPOINTS.DETAIL_INFO,
+    { docNumber: id },
+  );
+
+  setSelectedInfoTypeId(detail.infoTypeId);
+  setDocumentNumber(detail.docNumber);
+  setRev(String(detail.revNumber));
+  setReplace(String(detail.internalRevNumber));
+  setTitleJa(detail.titleJp);
+  setTitleEn(detail.titleEn);
+  setSelectedSlId(String(detail.slId));
+  setSelectedEctId(String(detail.ectId));
+  setSelectedEar99Id(String(detail.ear99Flg));
+  setDisplayDate(detail.displayDate);
+  setStatus(detail.status);
+  setViewCount(String(detail.viewCount));
+  setRemarks(detail.remarksJp);
+}
+
+
+
+
+
 import { http, HttpResponse } from 'msw';
 import { API_ENDPOINTS } from '../constants/api';
 
