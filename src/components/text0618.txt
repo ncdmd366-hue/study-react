@@ -131,3 +131,41 @@ async infoDetail(
 
 
 
+理由コード enum(update-disabled-reason.enum.ts)
+/**
+ * 更新(改訂/差替)不可理由
+ */
+export enum UpdateDisabledReason {
+  /** 公開終了 (No.6) */
+  PUBLICATION_CLOSED = 'PUBLICATION_CLOSED',
+  /** 改訂中の一時保存あり (No.2) */
+  DRAFT_REVISING = 'DRAFT_REVISING',
+  /** 差替中の一時保存あり (No.4) */
+  DRAFT_REPLACING = 'DRAFT_REPLACING',
+}
+
+
+
+
+
+
+
+InfoDetailResponseDto に追記
+import { UpdateDisabledReason } from './update-disabled-reason.enum';
+
+  // ...既存フィールドの末尾に追加
+
+  @ApiProperty({ description: '更新可否 (true:改訂/差替可 / false:不可)', example: true })
+  updatable: boolean;
+
+  @ApiProperty({
+    description: '更新不可理由 (updatable=false のときのみ設定。可のときは null)',
+    enum: UpdateDisabledReason,
+    nullable: true,
+    example: null,
+  })
+  reasonCode: UpdateDisabledReason | null;
+
+
+
+
