@@ -1,0 +1,133 @@
+info-detail-request.dto.ts
+
+
+import { ApiProperty } from '@nestjs/swagger';
+import { IsInt, IsNotEmpty, IsString } from 'class-validator';
+
+/**
+ * 詳細取得：リクエスト
+ */
+export class InfoDetailRequestDto {
+  @ApiProperty({
+    description: '情報ID(tInfoId)',
+    example: '88A34806-D258-F111-A135-E7592C126A3F',
+  })
+  @IsNotEmpty()
+  @IsString()
+  tInfoId: string;
+
+  @ApiProperty({ description: '改訂番号', example: 0 })
+  @IsNotEmpty()
+  @IsInt()
+  revNumber: number;
+
+  @ApiProperty({ description: '内部改訂番号', example: 0 })
+  @IsNotEmpty()
+  @IsInt()
+  internalRevNumber: number;
+}
+
+
+レスポンスDTO (info-detail-response.dto.ts)
+
+import { ApiProperty } from '@nestjs/swagger';
+import { InfoStatusDto } from './info-status.dto';
+
+/**
+ * 詳細取得：レスポンス
+ */
+export class InfoDetailResponseDto {
+  @ApiProperty({ description: '情報種別ID', example: '88A34806-D258-F111-A135-E7592C126A3F' })
+  infoTypeId: string;
+
+  @ApiProperty({ description: '文書番号' })
+  docNumber: string;
+
+  @ApiProperty({ description: '改訂番号', example: 0 })
+  revNumber: number;
+
+  @ApiProperty({ description: '内部改訂番号', example: 0 })
+  internalRevNumber: number;
+
+  @ApiProperty({ description: 'タイトル(日本語)' })
+  titleJp: string;
+
+  @ApiProperty({ description: 'タイトル(英語)', nullable: true })
+  titleEn: string | null;
+
+  @ApiProperty({ description: 'SL ID' })
+  slId: number;
+
+  @ApiProperty({ description: 'ECT ID' })
+  ectId: number;
+
+  @ApiProperty({ description: 'EAR99該当フラグ (0:非該当 / 1:該当)', example: 0 })
+  ear99Flg: number;
+
+  @ApiProperty({ description: '表示日付 (ISO 8601 / 日付)', example: '2026-06-18' })
+  displayDate: string;
+
+  @ApiProperty({ description: '版ステータス', type: InfoStatusDto })
+  status: InfoStatusDto;
+
+  @ApiProperty({
+    description: '開催回数 ※情報種別=水平展開フォロー会議議事録のときのみ表示',
+    nullable: true,
+  })
+  viewCount: number | null;
+
+  @ApiProperty({ description: '備考(日本語)', nullable: true })
+  remarksJp: string | null;
+
+  @ApiProperty({ description: '作成日時 (ISO 8601)', example: '2026-06-18T09:00:00+09:00' })
+  createdAt: string;
+
+  @ApiProperty({ description: '更新日時 (ISO 8601)', example: '2026-06-18T09:00:00+09:00' })
+  updatedAt: string;
+}
+
+
+
+コントローラー
+
+/**
+ * 詳細取得：情報詳細取得
+ * @returns InfoDetailResponseDto
+ */
+@ApiOperation({
+  summary: '詳細取得：情報詳細取得',
+})
+@ApiResponse({
+  status: 200,
+  description: 'OK',
+  type: InfoDetailResponseDto,
+})
+@ApiBadRequestResponse({
+  description: 'Bad Request',
+  type: BadRequestResponseDto,
+})
+@ApiInternalServerErrorResponse({
+  description: 'Internal server error',
+  type: InternalServerErrorResponseDto,
+})
+@Post('detail/info')
+@HttpCode(200)
+async infoDetail(
+  @Body() infoDetailRequestDto: InfoDetailRequestDto,
+) {
+  //Validation Check
+  this.docMngSearchService.validateInfoDetailRequest(
+    infoDetailRequestDto,
+  );
+  //検索
+  const detail = await this.docMngSearchService.findInfoDetail(
+    infoDetailRequestDto,
+  );
+  //ResponseDtoに変換して返却
+  return this.docMngSearchService.convertInfoDetailResponseDto(
+    detail,
+  );
+}
+
+
+
