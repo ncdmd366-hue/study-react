@@ -1,40 +1,69 @@
 /**
  * 詳細：情報取得
- * (entityを取得)
- * @returns TInfoEdition
+ *
+ * 一覧（findInfoResultList）と同じ結合構成を使い、複合キー
+ * （tInfoId + revNumber + internalRevNumber）で「情報版」を1件だけ取得する。
+ * 後段の convert が InfoDetailResponseDto に詰め替えるので、レスポンスが参照する
+ * リレーション（情報種別 / ステータス / SL / ECT / ファイル）も一緒にロードしておく。
+ *
+ * @returns TInfoEdition（リレーション込み・1件）
  */
 async findInfoDetail(infoDetailRequestDto: InfoDetailRequestDto) {
+  // リクエストから複合キーの3要素を取り出す
+  // tInfoId=文書単位のID / revNumber=改訂番号 / internalRevNumber=差替番号
   const { tInfoId, revNumber, internalRevNumber } = infoDetailRequestDto;
 
-  //検索（複合キーで1件特定）
+  // 情報版(tInfoEdition)を起点に、必要なテーブルを結合して1件取得する。
+  // 各結合の del_flg = 0 は「論理削除されていない行だけを対象にする」条件。
   const detail = await this.tInfoEditionRepository
     .createQueryBuilder('tInfoEdition')
+
+    // 親の「情報(tInfo)」を結合。複合キーの tInfoId はこの tInfo 側にあり、
+    // 情報種別(mInfoType)もここから辿る。innerJoin=必須（無ければ本体ごと除外）
     .innerJoinAndSelect(
       'tInfoEdition.tInfo',
       'tInfo',
       'tInfoEdition.del_flg = 0 AND tInfo.del_flg = 0',
     )
+
+    // 情報種別 → レスポンスの infoType に使う
     .innerJoinAndSelect('tInfo.mInfoType', 'mInfoType', 'mInfoType.del_flg = 0')
+
+    // ファイル一覧 → レスポンスの fileInfos[] に使う。
+    // ファイルが0件のケースもあるので leftJoin（無くても本体は残す）
     .leftJoinAndSelect(
       'tInfoEdition.tInfoEditionFiles',
       'tInfoEditionFile',
       'tInfoEditionFile.del_flg = 0',
     )
+
+    // ファイル種類 → 各ファイルの fileTypeName に使う
     .innerJoinAndSelect(
       'tInfoEditionFile.mFileType',
       'mFileType',
       'mFileType.del_flg = 0',
     )
-    // ↓詳細でのみ必要（実ファイル名 fileName 用）。一覧には無い結合
-    // ※TInfoEditionFile の tFile リレーション名 / tFile に del_flg があるか要確認
+
+    // 実ファイル → 各ファイルの fileName（例：xxx.pdf）に使う。
+    // ★詳細でのみ必要な結合（一覧には無い）
+    // ※TInfoEditionFile 側の tFile リレーション名 / tFile に del_flg があるかを要確認
     .innerJoinAndSelect('tInfoEditionFile.tFile', 'tFile', 'tFile.del_flg = 0')
+
+    // ECT → レスポンスの ect に使う
     .innerJoinAndSelect('tInfoEdition.mEct', 'mEct', 'mEct.del_flg = 0')
+
+    // SL → レスポンスの sl に使う
     .innerJoinAndSelect('tInfoEdition.mSl', 'mSl', 'mSl.del_flg = 0')
+
+    // ステータス → レスポンスの infoEditionStatus に使う
     .innerJoinAndSelect(
       'tInfoEdition.mInfoEditionStatus',
       'mInfoEditionStatus',
       'mInfoEditionStatus.del_flg = 0',
     )
+
+    // --- ここから複合キーで1件に絞り込む（一覧の動的whereビルダーは使わない） ---
+    // :tInfoId などは通常のパラメータバインド（SQLインジェクション対策）
     // ※tInfoId は tInfo 側のキー。実カラム名（id か t_info_id か）を要確認
     .where('tInfo.id = :tInfoId', { tInfoId })
     // ※rev_number / internal_rev_number の実カラム名を要確認
@@ -42,12 +71,16 @@ async findInfoDetail(infoDetailRequestDto: InfoDetailRequestDto) {
     .andWhere('tInfoEdition.internal_rev_number = :internalRevNumber', {
       internalRevNumber,
     })
+
+    // 1件だけ取得（一覧は getMany、詳細は getOne）
     .getOne();
 
+  // キーに一致する情報版が無ければ not found 扱い
+  // ※例外の型はプロジェクトの方針に合わせる
   if (!detail) {
-    // ※not found 時の例外はプロジェクトの方針に合わせる
     throw new NotFoundException('情報が見つかりませんでした');
   }
 
+  // リレーション込みのエンティティを返す。DTO化は convert の担当
   return detail;
 }
