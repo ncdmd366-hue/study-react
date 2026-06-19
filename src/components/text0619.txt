@@ -1,0 +1,53 @@
+/**
+ * 詳細：情報取得
+ * (entityを取得)
+ * @returns TInfoEdition
+ */
+async findInfoDetail(infoDetailRequestDto: InfoDetailRequestDto) {
+  const { tInfoId, revNumber, internalRevNumber } = infoDetailRequestDto;
+
+  //検索（複合キーで1件特定）
+  const detail = await this.tInfoEditionRepository
+    .createQueryBuilder('tInfoEdition')
+    .innerJoinAndSelect(
+      'tInfoEdition.tInfo',
+      'tInfo',
+      'tInfoEdition.del_flg = 0 AND tInfo.del_flg = 0',
+    )
+    .innerJoinAndSelect('tInfo.mInfoType', 'mInfoType', 'mInfoType.del_flg = 0')
+    .leftJoinAndSelect(
+      'tInfoEdition.tInfoEditionFiles',
+      'tInfoEditionFile',
+      'tInfoEditionFile.del_flg = 0',
+    )
+    .innerJoinAndSelect(
+      'tInfoEditionFile.mFileType',
+      'mFileType',
+      'mFileType.del_flg = 0',
+    )
+    // ↓詳細でのみ必要（実ファイル名 fileName 用）。一覧には無い結合
+    // ※TInfoEditionFile の tFile リレーション名 / tFile に del_flg があるか要確認
+    .innerJoinAndSelect('tInfoEditionFile.tFile', 'tFile', 'tFile.del_flg = 0')
+    .innerJoinAndSelect('tInfoEdition.mEct', 'mEct', 'mEct.del_flg = 0')
+    .innerJoinAndSelect('tInfoEdition.mSl', 'mSl', 'mSl.del_flg = 0')
+    .innerJoinAndSelect(
+      'tInfoEdition.mInfoEditionStatus',
+      'mInfoEditionStatus',
+      'mInfoEditionStatus.del_flg = 0',
+    )
+    // ※tInfoId は tInfo 側のキー。実カラム名（id か t_info_id か）を要確認
+    .where('tInfo.id = :tInfoId', { tInfoId })
+    // ※rev_number / internal_rev_number の実カラム名を要確認
+    .andWhere('tInfoEdition.rev_number = :revNumber', { revNumber })
+    .andWhere('tInfoEdition.internal_rev_number = :internalRevNumber', {
+      internalRevNumber,
+    })
+    .getOne();
+
+  if (!detail) {
+    // ※not found 時の例外はプロジェクトの方針に合わせる
+    throw new NotFoundException('情報が見つかりませんでした');
+  }
+
+  return detail;
+}
