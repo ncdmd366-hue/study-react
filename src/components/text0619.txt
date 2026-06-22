@@ -1,3 +1,24 @@
+
+SELECT
+  e.id                AS edition_id,
+  ef.id               AS file_id,
+  ef.t_file_id        AS fk_t_file_id,      -- FKが入っているか
+  f.id                AS t_file_found,      -- t_fileが実在するか
+  f.name              AS file_name,
+  ef.m_file_type_id,
+  mft.id              AS m_file_type_found,
+  mft.name            AS file_type_name
+FROM t_info_edition e
+JOIN t_info_edition_file ef ON ef.t_info_edition_id = e.id
+LEFT JOIN t_file f          ON f.id  = ef.t_file_id
+LEFT JOIN m_file_type mft   ON mft.id = ef.m_file_type_id
+WHERE e.t_info_id = '21FBB61B-AD15-4770-BD71-7F9BF1E3D9A8'
+  AND e.rev_number = 1
+  AND e.internal_rev_number = 1;
+
+
+
+
 /**
  * 詳細：情報取得
  *
