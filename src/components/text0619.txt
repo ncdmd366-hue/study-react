@@ -1,3 +1,13 @@
+SELECT TOP 20
+  e.t_info_id, e.rev_number, e.internal_rev_number, f.name AS file_name
+FROM t_info_edition e
+JOIN t_info_edition_file ef ON ef.t_info_edition_id = e.id
+JOIN t_file f ON f.id = ef.t_file_id   -- t_fileが実在するものだけ
+ORDER BY e.updated_at DESC;
+
+
+
+
 
 SELECT
   e.id                AS edition_id,
