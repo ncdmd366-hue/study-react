@@ -1,0 +1,32 @@
+constructor(tInfoEdition: TInfoEdition) {
+  // 情報種別は tInfo 経由
+  this.infoType = new InfoTypeDto(tInfoEdition.tInfo.mInfoType); // ※InfoTypeDto の引数形を確認
+
+  this.docNumber = tInfoEdition.doc_number;                  // 確認済
+  this.titleJp = tInfoEdition.title_jp;                      // 確認済
+  this.titleEn = tInfoEdition.title_en;                      // ※下のカラムで確認
+  this.revNumber = tInfoEdition.rev_number;                  // 確認済
+  this.internalRevNumber = tInfoEdition.internal_rev_number; // 確認済
+
+  this.infoEditionStatus = new InfoEditionStatusDto(tInfoEdition.mInfoEditionStatus); // ※引数形確認
+  this.displayDate = tInfoEdition.display_date;              // ※
+  this.sl = new SlDto(tInfoEdition.mSl);                     // ※引数形確認
+  this.ect = new EctDto(tInfoEdition.mEct);                  // ※引数形確認
+  this.ear99Flg = tInfoEdition.ear99_flg;                    // ※
+  this.updatedAt = tInfoEdition.updated_at;                  // ※
+
+  // 種別固有属性
+  this.text1 = tInfoEdition.text1;                           // ※
+  this.int1 = tInfoEdition.int1;                             // ※
+  this.datetime1 = tInfoEdition.datetime1;                   // ※
+
+  this.remarksJp = tInfoEdition.remarks_jp;                  // ※
+
+  // ファイル一覧 → 1ファイル=1要素（0件なら空配列）
+  this.fileInfos = (tInfoEdition.tInfoEditionFiles ?? []).map(
+    (file) => new DetailFileInfoResponseDto(file),
+  );
+
+  this.createdAt = tInfoEdition.created_at;                  // ※
+  this.tInfoId = tInfoEdition.tInfo.id;                      // 確認済（tInfo.id = GUID）
+}
