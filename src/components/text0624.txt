@@ -1,0 +1,11 @@
+const detailKey = useMemo(
+  () =>
+    isDetailMode
+      ? {
+          tInfoId: initialTInfoId,
+          revNumber: revNumber,
+          internalRevNumber: internalRevNumber,
+        }
+      : null,
+  [isDetailMode, initialTInfoId, revNumber, internalRevNumber],
+);
