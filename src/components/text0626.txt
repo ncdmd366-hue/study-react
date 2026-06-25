@@ -1,0 +1,47 @@
+// エディション群から、表示中の文書の改訂中/差替中ドラフトの有無を判定
+const judgeDraftStatus = (current, editions) => {
+  // current: 今表示する文書 { infoTypeId, docNumber, revNumber, internalRevNumber }
+  // editions: 一覧の全エディション
+
+  // 同じ情報種別 かつ 同じ文書番号(null同士の一致も意図通り)
+  const sameDoc = editions.filter(
+    (e) =>
+      e.infoType.id === current.infoTypeId &&
+      e.docNumber === current.docNumber,
+  );
+
+  const published = sameDoc.find((e) => e.infoEditionStatus.id === '200');
+  const drafts = sameDoc.filter((e) => e.infoEditionStatus.id === '100');
+
+  if (!published || drafts.length === 0) {
+    return { hasReviseDraft: false, hasReplaceDraft: false };
+  }
+
+  const hasReviseDraft = drafts.some((d) => d.revNumber > published.revNumber);
+  const hasReplaceDraft = drafts.some((d) => d.internalRevNumber > published.internalRevNumber);
+  return { hasReviseDraft, hasReplaceDraft };
+};
+
+
+
+
+const result = judgeDraftStatus(
+  {
+    infoTypeId: row.infoType.id,
+    docNumber: row.docNumber,
+    revNumber: row.revNumber,
+    internalRevNumber: row.internalRevNumber,
+  },
+  allEditions, // 一覧の全エディション
+);
+
+window.open(
+  `/edms/document?mode=2&tInfoId=${row.tInfoId}&revNumber=${row.revNumber}&internalRevNumber=${row.internalRevNumber}` +
+  `&hasReviseDraft=${result.hasReviseDraft}&hasReplaceDraft=${result.hasReplaceDraft}`,
+  '_blank',
+  'noopener,noreferrer',
+);
+
+
+const hasReviseDraft = searchParams.get('hasReviseDraft') === 'true';
+const hasReplaceDraft = searchParams.get('hasReplaceDraft') === 'true';
