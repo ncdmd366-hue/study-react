@@ -1,3 +1,22 @@
+SELECT id, display_file_name, t_info_edition_id, m_file_type_id, t_file_id
+FROM [dbo].[T_INFO_EDITION_FILE]
+WHERE t_file_id IN (1, 2)
+  AND del_flg = 0;
+
+-- Excel ファイル → Excel(m_file_type_id=2)
+UPDATE [dbo].[T_INFO_EDITION_FILE]
+SET m_file_type_id = 2
+WHERE id = '747DB1AE-F420-4086-9D5D-18F69A6FEE72';
+
+-- PowerBI ファイル → PowerBI(m_file_type_id=1)
+UPDATE [dbo].[T_INFO_EDITION_FILE]
+SET m_file_type_id = 1
+WHERE id = 'PowerBIファイルのGUID';
+
+
+
+
+
 const selectedRegistrationFiles = useMemo(() => {
   if (detailKey) {
     return fileInfos.map((file, index) => ({
