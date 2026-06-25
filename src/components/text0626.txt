@@ -1,3 +1,34 @@
+const handleRevise = () => {
+  if (status?.id === '210') {
+    // 公開終了:メッセージ表示してブロック
+    return;
+  }
+  if (hasReviseDraft) {
+    // 改訂中一時保存あり:メッセージ表示してブロック
+    return;
+  }
+  // 改訂可能:改訂画面へ遷移
+};
+
+
+
+const handleReplace = () => {
+  if (status?.id === '210') {
+    // 公開終了:メッセージ表示してブロック
+    return;
+  }
+  if (hasReplaceDraft) {
+    // 差替中一時保存あり:メッセージ表示してブロック
+    return;
+  }
+  // 差替可能:差替画面へ遷移
+};
+
+
+
+
+
+
 // エディション群から、表示中の文書の改訂中/差替中ドラフトの有無を判定
 const judgeDraftStatus = (current, editions) => {
   // current: 今表示する文書 { infoTypeId, docNumber, revNumber, internalRevNumber }
