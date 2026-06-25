@@ -1,0 +1,22 @@
+const selectedRegistrationFiles = useMemo(() => {
+  if (detailKey) {
+    return fileInfos.map((file, index) => ({
+      rowKey: file.infoEditionFileId ?? `${file.fileTypeName}-${index}`,
+      fileTypeName: file.fileTypeName,
+      displayFileName: file.displayFileName,
+      fileName: file.fileName,
+      required: false,
+    }));
+  }
+
+  if (!selectedInfoType) {
+    return [];
+  }
+  return selectedInfoType.infoTypeFiles
+    .filter((file) => file.registrationType === registrationTypes.actualFile)
+    .map((file, index) => ({
+      rowKey: `${file.fileTypeName}-${index}`,
+      fileTypeName: file.fileTypeName,
+      required: file.required,
+    }));
+}, [detailKey, fileInfos, selectedInfoType]);
