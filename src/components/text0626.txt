@@ -1,3 +1,27 @@
+fileInfos: [
+  {
+    fileTypeName: 'project_jp',
+    displayFileName: '運転情報見える化',
+    fileName: '運転情報見える化_Excel.xlsx',
+    infoEditionFileId: '747DB1AE-F420-4086-9D5D-18F69A6FEE72',
+  },
+],
+
+expect(result.current.selectedRegistrationFiles).toEqual([
+  {
+    rowKey: 'project_jp-0',
+    fileTypeName: 'project_jp',
+    displayFileName: '運転情報見える化',
+    fileName: '運転情報見える化_Excel.xlsx',
+    required: false,
+  },
+]);
+
+
+
+
+
+
 it('詳細取得APIのdisplayDateがローカル日付に変換されてセットされる', async () => {
   const detailKey = {
     tInfoId: '35D5908F-CA58-F111-A135-E7592C126A3F',
