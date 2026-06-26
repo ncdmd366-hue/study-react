@@ -1,3 +1,32 @@
+it('詳細ボタン押下時、一時保存がない場合は判定がfalseでURLに載る', async () => {
+  const user = userEvent.setup();
+  vi.spyOn(window, 'open').mockImplementation(() => null);
+
+  // 公開済1件のみ(一時保存なし)→ 詳細ボタンは出る、judgeDraftStatusはearly return
+  const published = makeEdition({
+    tInfoId: 'T-001',
+    revNumber: 0,
+    internalRevNumber: 0,
+    infoEditionStatus: { ...items2.infoEditionStatus, id: STATUS_ID.PUBLISHED },
+  });
+
+  render(<SearchResultTable isConditionOpen={true} searchResults={[published]} />);
+
+  await user.click(screen.getAllByRole('button', { name: '詳細' })[0]);
+
+  expect(window.open).toHaveBeenCalledWith(
+    expect.stringContaining('hasReviseDraft=false'),
+    '_blank',
+    'noopener,noreferrer',
+  );
+});
+
+
+
+
+
+
+
 it('詳細ボタン押下時、公開済または一時保存が揃わない場合は判定がfalseでURLに載る', async () => {
   const user = userEvent.setup();
   vi.spyOn(window, 'open').mockImplementation(() => null);
