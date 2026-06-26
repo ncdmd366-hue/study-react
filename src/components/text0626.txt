@@ -1,3 +1,75 @@
+it('詳細取得APIのdisplayDateがローカル日付に変換されてセットされる', async () => {
+  const detailKey = {
+    tInfoId: '35D5908F-CA58-F111-A135-E7592C126A3F',
+    revNumber: '0',
+    internalRevNumber: '0',
+  };
+
+  // 選択肢系のモック(infoTypes, sls, ects)を既存と同様に設定
+  vi.mocked(postEDMS)
+    .mockResolvedValueOnce({ infoTypes: [...] })
+    .mockResolvedValueOnce({ sls: [...] })
+    .mockResolvedValueOnce({ ects: [...] })
+    // 4回目: 詳細取得
+    .mockResolvedValueOnce({
+      infoType: { id: 'INFO_TYPE_1' },
+      docNumber: null,
+      revNumber: 0,
+      internalRevNumber: 0,
+      titleJp: 'タイトル',
+      titleEn: 'title',
+      sl: { id: 1, name: '1' },
+      ect: { id: 1, nameJp: '非該当', nameEn: null },
+      ear99Flg: 0,
+      displayDate: '2026-06-24T15:00:00.000Z',  // ← UTC。JSTで6/25
+      infoEditionStatus: { id: '200', nameJp: '公開済', nameEn: null },
+      int1: null,
+      remarksJp: null,
+      fileInfos: [],
+      updatedAt: '2026-06-24T15:00:00.000Z',
+      createdAt: '2026-06-24T15:00:00.000Z',
+      tInfoId: detailKey.tInfoId,
+    });
+
+  const { result } = renderHook(() =>
+    useDocumentMode({ enabled: true, detailKey })
+  );
+
+  // 詳細取得が呼ばれることを確認
+  await waitFor(() => {
+    expect(postEDMS).toHaveBeenNthCalledWith(
+      4,
+      API_ENDPOINTS.DETAIL_INFO,
+      {
+        tInfoId: detailKey.tInfoId,
+        revNumber: Number(detailKey.revNumber),
+        internalRevNumber: Number(detailKey.internalRevNumber),
+      },
+    );
+  });
+
+  // 各項目が state に設定されることを確認
+await waitFor(() => {
+  expect(result.current.selectedInfoTypeId).toBe('INFO_TYPE_1');
+  expect(result.current.documentNumber).toBe(null);
+  expect(result.current.revNumber).toBe(0);
+  expect(result.current.internalRevNumber).toBe(0);
+  expect(result.current.titleJa).toBe('タイトル');
+  expect(result.current.titleEn).toBe('title');
+  expect(result.current.selectedSlId).toBe('1');
+  expect(result.current.selectedEctId).toBe('1');
+  expect(result.current.selectedEar99Id).toBe('0');
+  expect(result.current.displayDate).toBe('2026-06-25');
+  expect(result.current.status).toBe('公開済');
+  expect(result.current.remarks).toBe(null);
+});
+});
+
+
+
+
+
+
 const handleRevise = () => {
   if (status?.id === '210') {
     // 公開終了:メッセージ表示してブロック
