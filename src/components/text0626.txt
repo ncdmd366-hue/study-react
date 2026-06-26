@@ -1,3 +1,26 @@
+it('単独行の詳細ボタン押下でearly returnを通る', async () => {
+  const user = userEvent.setup();
+  vi.spyOn(window, 'open').mockImplementation(() => null);
+
+  // 一時保存だけ(公開済なし)→ !published で early return
+  const single = makeEdition({
+    tInfoId: 'T-001',
+    infoEditionStatus: { ...items2.infoEditionStatus, id: STATUS_ID.DRAFT },
+  });
+
+  render(<SearchResultTable isConditionOpen={true} searchResults={[single]} />);
+  await user.click(screen.getAllByRole('button', { name: '詳細' })[0]);
+
+  expect(window.open).toHaveBeenCalledWith(
+    expect.stringContaining('hasReviseDraft=false'),
+    '_blank',
+    'noopener,noreferrer',
+  );
+});
+
+
+
+
 it('judgeDraftStatus: editionsが空なら両方false', () => {
   expect(judgeDraftStatus(current, [])).toEqual({
     hasReviseDraft: false,
