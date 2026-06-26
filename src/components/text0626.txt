@@ -1,3 +1,14 @@
+it('searchResultsがundefinedでもエラーにならず空配列扱いになる', () => {
+  render(<SearchResultTable isConditionOpen={true} searchResults={undefined} />);
+  // レンダリングが成功すればOK(safeResults = [] が評価される)
+  // 行が出ないことを確認してもいい
+  expect(screen.queryAllByRole('button', { name: '詳細' })).toHaveLength(0);
+});
+
+
+
+
+
 it('詳細ボタン押下時、一時保存がない場合は判定がfalseでURLに載る', async () => {
   const user = userEvent.setup();
   vi.spyOn(window, 'open').mockImplementation(() => null);
