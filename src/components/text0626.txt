@@ -1,3 +1,31 @@
+it('詳細ボタン押下時、公開済または一時保存が揃わない場合は判定がfalseでURLに載る', async () => {
+  const user = userEvent.setup();
+  vi.spyOn(window, 'open').mockImplementation(() => null);
+
+  // 行が1件だけ(一時保存のみ)→ published が見つからず early return
+  const single = makeEdition({
+    tInfoId: 'T-001',
+    revNumber: 0,
+    internalRevNumber: 0,
+    infoEditionStatus: { ...items2.infoEditionStatus, id: STATUS_ID.DRAFT },
+  });
+
+  render(<SearchResultTable isConditionOpen={true} searchResults={[single]} />);
+
+  await user.click(screen.getAllByRole('button', { name: '詳細' })[0]);
+
+  expect(window.open).toHaveBeenCalledWith(
+    expect.stringContaining('hasReviseDraft=false&hasReplaceDraft=false'),
+    '_blank',
+    'noopener,noreferrer',
+  );
+});
+
+
+
+
+
+
 it('単独行の詳細ボタン押下でearly returnを通る', async () => {
   const user = userEvent.setup();
   vi.spyOn(window, 'open').mockImplementation(() => null);
