@@ -1,3 +1,68 @@
+it('改訂ボタン: 公開終了ならダイアログ表示', async () => {
+  // statusId を 210 にする詳細レスポンスをモック
+  // URL は hasReviseDraft=false
+  mockDetailResponse({ infoEditionStatus: { id: '210', nameJp: '公開終了', nameEn: null } });
+  mockUseSearchParams.mockReturnValue([
+    new URLSearchParams('tInfoId=T-001&revNumber=0&internalRevNumber=0&hasReviseDraft=false&hasReplaceDraft=false'),
+    vi.fn(),
+  ]);
+
+  render(<DocumentPage />);
+
+  // 値が流し込まれるのを待つ
+  await waitFor(() => {
+    expect(screen.getByText('改訂')).toBeInTheDocument();
+  });
+
+  fireEvent.click(screen.getByRole('button', { name: '改訂' }));
+
+  // ダイアログにメッセージが出る
+  await waitFor(() => {
+    expect(screen.getByText(MESSAGES.UPDATE_ERROR_ENDED)).toBeInTheDocument();
+  });
+});
+
+it('改訂ボタン: 改訂中一時保存ありならダイアログ表示', async () => {
+  // statusId は 200(公開済)、hasReviseDraft=true
+  mockDetailResponse({ infoEditionStatus: { id: '200', nameJp: '公開済', nameEn: null } });
+  mockUseSearchParams.mockReturnValue([
+    new URLSearchParams('tInfoId=T-001&revNumber=0&internalRevNumber=0&hasReviseDraft=true&hasReplaceDraft=false'),
+    vi.fn(),
+  ]);
+
+  render(<DocumentPage />);
+  await waitFor(() => expect(screen.getByText('改訂')).toBeInTheDocument());
+
+  fireEvent.click(screen.getByRole('button', { name: '改訂' }));
+
+  await waitFor(() => {
+    expect(screen.getByText(MESSAGES.UPDATE_ERROR_REVISE)).toBeInTheDocument();
+  });
+});
+
+it('改訂ボタン: 公開終了でなく改訂中もなければダイアログを表示しない', async () => {
+  // statusId 200、hasReviseDraft=false
+  mockDetailResponse({ infoEditionStatus: { id: '200', nameJp: '公開済', nameEn: null } });
+  mockUseSearchParams.mockReturnValue([
+    new URLSearchParams('tInfoId=T-001&revNumber=0&internalRevNumber=0&hasReviseDraft=false&hasReplaceDraft=false'),
+    vi.fn(),
+  ]);
+
+  render(<DocumentPage />);
+  await waitFor(() => expect(screen.getByText('改訂')).toBeInTheDocument());
+
+  fireEvent.click(screen.getByRole('button', { name: '改訂' }));
+
+  // ダイアログのメッセージが出ない
+  expect(screen.queryByText(MESSAGES.UPDATE_ERROR_ENDED)).not.toBeInTheDocument();
+  expect(screen.queryByText(MESSAGES.UPDATE_ERROR_REVISE)).not.toBeInTheDocument();
+});
+
+
+
+
+
+
 fileInfos: [
   {
     fileTypeName: 'project_jp',
