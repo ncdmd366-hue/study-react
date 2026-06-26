@@ -1,3 +1,131 @@
+const makeEdition = (overrides) => ({
+  ...items2,
+  ...overrides,
+});
+
+const current = {
+  infoTypeId: items2.infoType.id,
+  docNumber: items2.docNumber,
+  revNumber: 0,
+  internalRevNumber: 0,
+};
+
+it('judgeDraftStatus: 公開済がないと両方false', () => {
+  const editions = [
+    makeEdition({
+      infoEditionStatus: { ...items2.infoEditionStatus, id: STATUS_ID.DRAFT },
+      revNumber: 1,
+    }),
+  ];
+  expect(judgeDraftStatus(current, editions)).toEqual({
+    hasReviseDraft: false,
+    hasReplaceDraft: false,
+  });
+});
+
+it('judgeDraftStatus: 一時保存がないと両方false', () => {
+  const editions = [
+    makeEdition({
+      infoEditionStatus: { ...items2.infoEditionStatus, id: STATUS_ID.PUBLISHED },
+    }),
+  ];
+  expect(judgeDraftStatus(current, editions)).toEqual({
+    hasReviseDraft: false,
+    hasReplaceDraft: false,
+  });
+});
+
+it('judgeDraftStatus: 一時保存のrevが公開済より大きいと改訂中あり', () => {
+  const editions = [
+    makeEdition({
+      infoEditionStatus: { ...items2.infoEditionStatus, id: STATUS_ID.PUBLISHED },
+      revNumber: 0,
+      internalRevNumber: 0,
+    }),
+    makeEdition({
+      infoEditionStatus: { ...items2.infoEditionStatus, id: STATUS_ID.DRAFT },
+      revNumber: 1,
+      internalRevNumber: 0,
+    }),
+  ];
+  expect(judgeDraftStatus(current, editions)).toEqual({
+    hasReviseDraft: true,
+    hasReplaceDraft: false,
+  });
+});
+
+it('judgeDraftStatus: 一時保存のinternalRevが公開済より大きいと差替中あり', () => {
+  const editions = [
+    makeEdition({
+      infoEditionStatus: { ...items2.infoEditionStatus, id: STATUS_ID.PUBLISHED },
+      revNumber: 0,
+      internalRevNumber: 0,
+    }),
+    makeEdition({
+      infoEditionStatus: { ...items2.infoEditionStatus, id: STATUS_ID.DRAFT },
+      revNumber: 0,
+      internalRevNumber: 1,
+    }),
+  ];
+  expect(judgeDraftStatus(current, editions)).toEqual({
+    hasReviseDraft: false,
+    hasReplaceDraft: true,
+  });
+});
+
+it('judgeDraftStatus: 一時保存がrev/internalRevとも公開済以下なら両方false', () => {
+  const editions = [
+    makeEdition({
+      infoEditionStatus: { ...items2.infoEditionStatus, id: STATUS_ID.PUBLISHED },
+      revNumber: 0,
+      internalRevNumber: 0,
+    }),
+    makeEdition({
+      infoEditionStatus: { ...items2.infoEditionStatus, id: STATUS_ID.DRAFT },
+      revNumber: 0,
+      internalRevNumber: 0,
+    }),
+  ];
+  expect(judgeDraftStatus(current, editions)).toEqual({
+    hasReviseDraft: false,
+    hasReplaceDraft: false,
+  });
+});
+
+it('詳細ボタン押下で判定結果をURLに載せて遷移する', async () => {
+  const user = userEvent.setup();
+  vi.spyOn(window, 'open').mockImplementation(() => null);
+
+  const published = makeEdition({
+    tInfoId: 'T-001',
+    revNumber: 0,
+    internalRevNumber: 0,
+    infoEditionStatus: { ...items2.infoEditionStatus, id: STATUS_ID.PUBLISHED },
+  });
+  const draft = makeEdition({
+    tInfoId: 'T-002',
+    revNumber: 1,
+    internalRevNumber: 0,
+    infoEditionStatus: { ...items2.infoEditionStatus, id: STATUS_ID.DRAFT },
+  });
+
+  render(<SearchResultTable isConditionOpen={true} searchResults={[published, draft]} />);
+
+  await user.click(screen.getAllByRole('button', { name: '詳細' })[0]);
+
+  expect(window.open).toHaveBeenCalledWith(
+    expect.stringContaining('hasReviseDraft=true'),
+    '_blank',
+    'noopener,noreferrer',
+  );
+});
+
+
+
+
+
+
+
 import { judgeDraftStatus } from '...searchResultTable';
 import { STATUS_ID } from '...';
 
