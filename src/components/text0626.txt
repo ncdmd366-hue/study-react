@@ -1,3 +1,36 @@
+
+it('改訂ボタン: 公開終了ならダイアログ表示', async () => {
+  const user = userEvent.setup();
+  vi.mocked(useDocumentMode).mockReturnValue({
+    ...createMockDocumentModeResult(),
+    statusId: STATUS_ID.ENDED,   // '210'
+  });
+  mockUseSearchParams.mockReturnValue([
+    new URLSearchParams('tInfoId=T-001&revNumber=0&internalRevNumber=0&hasReviseDraft=false&hasReplaceDraft=false'),
+    vi.fn(),
+  ]);
+
+  render(<DocumentPage />);
+
+  await user.click(screen.getByRole('button', { name: '改訂' }));
+
+  expect(screen.getByText(MESSAGES.UPDATE_ERROR_ENDED)).toBeInTheDocument();
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 it('改訂ボタン: 公開終了ならダイアログ表示', async () => {
   // statusId を 210 にする詳細レスポンスをモック
   // URL は hasReviseDraft=false
