@@ -17,6 +17,104 @@ it('改訂ボタン: 公開終了ならダイアログ表示', async () => {
   expect(screen.getByText(MESSAGES.UPDATE_ERROR_ENDED)).toBeInTheDocument();
 });
 
+it('改訂ボタン: 改訂中一時保存ありならダイアログ表示', async () => {
+  const user = userEvent.setup();
+  vi.mocked(useDocumentMode).mockReturnValue({
+    ...createMockDocumentModeResult(),
+    statusId: '200',   // 公開済(ENDED でない)
+  });
+  mockUseSearchParams.mockReturnValue([
+    new URLSearchParams('tInfoId=T-001&revNumber=0&internalRevNumber=0&hasReviseDraft=true&hasReplaceDraft=false'),
+    vi.fn(),
+  ]);
+
+  render(<DocumentPage />);
+  await user.click(screen.getByRole('button', { name: '改訂' }));
+
+  expect(screen.getByText(MESSAGES.UPDATE_ERROR_REVISE)).toBeInTheDocument();
+});
+
+it('改訂ボタン: 公開終了でなく改訂中もなければダイアログを表示しない', async () => {
+  const user = userEvent.setup();
+  vi.mocked(useDocumentMode).mockReturnValue({
+    ...createMockDocumentModeResult(),
+    statusId: '200',
+  });
+  mockUseSearchParams.mockReturnValue([
+    new URLSearchParams('tInfoId=T-001&revNumber=0&internalRevNumber=0&hasReviseDraft=false&hasReplaceDraft=false'),
+    vi.fn(),
+  ]);
+
+  render(<DocumentPage />);
+  await user.click(screen.getByRole('button', { name: '改訂' }));
+
+  expect(screen.queryByText(MESSAGES.UPDATE_ERROR_ENDED)).not.toBeInTheDocument();
+  expect(screen.queryByText(MESSAGES.UPDATE_ERROR_REVISE)).not.toBeInTheDocument();
+});
+
+it('差替ボタン: 公開終了ならダイアログ表示', async () => {
+  const user = userEvent.setup();
+  vi.mocked(useDocumentMode).mockReturnValue({
+    ...createMockDocumentModeResult(),
+    statusId: STATUS_ID.ENDED,   // '210'
+  });
+  mockUseSearchParams.mockReturnValue([
+    new URLSearchParams('tInfoId=T-001&revNumber=0&internalRevNumber=0&hasReviseDraft=false&hasReplaceDraft=false'),
+    vi.fn(),
+  ]);
+
+  render(<DocumentPage />);
+
+  await user.click(screen.getByRole('button', { name: '差替' }));
+
+  expect(screen.getByText(MESSAGES.UPDATE_ERROR_ENDED)).toBeInTheDocument();
+});
+
+it('差替ボタン: 差替中一時保存ありならダイアログ表示', async () => {
+  const user = userEvent.setup();
+  vi.mocked(useDocumentMode).mockReturnValue({
+    ...createMockDocumentModeResult(),
+    statusId: '200',   // 公開済(ENDED でない)
+  });
+  mockUseSearchParams.mockReturnValue([
+    new URLSearchParams('tInfoId=T-001&revNumber=0&internalRevNumber=0&hasReviseDraft=false&hasReplaceDraft=true'),
+    vi.fn(),
+  ]);
+
+  render(<DocumentPage />);
+  await user.click(screen.getByRole('button', { name: '差替' }));
+
+  expect(screen.getByText(MESSAGES.UPDATE_ERROR_REPLACE)).toBeInTheDocument();
+});
+
+it('差替ボタン: 公開終了でなく差替中もなければダイアログを表示しない', async () => {
+  const user = userEvent.setup();
+  vi.mocked(useDocumentMode).mockReturnValue({
+    ...createMockDocumentModeResult(),
+    statusId: '200',
+  });
+  mockUseSearchParams.mockReturnValue([
+    new URLSearchParams('tInfoId=T-001&revNumber=0&internalRevNumber=0&hasReviseDraft=false&hasReplaceDraft=false'),
+    vi.fn(),
+  ]);
+
+  render(<DocumentPage />);
+  await user.click(screen.getByRole('button', { name: '差替' }));
+
+  expect(screen.queryByText(MESSAGES.UPDATE_ERROR_ENDED)).not.toBeInTheDocument();
+  expect(screen.queryByText(MESSAGES.UPDATE_ERROR_REPLACE)).not.toBeInTheDocument();
+});
+
+
+
+
+
+
+
+
+
+
+
 
 
 
