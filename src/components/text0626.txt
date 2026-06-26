@@ -1,3 +1,35 @@
+it('詳細モードのときファイル名をTypographyで表示する', () => {
+  render(
+    <RegistrationFileTable
+      mode={DOCUMENT_MODES.detail}   // ← 詳細モードにする
+      rows={[
+        {
+          rowKey: 'project_jp-0',
+          fileTypeName: 'project_jp',
+          displayFileName: '運転情報見える化',
+          fileName: '運転情報見える化_Excel.xlsx',   // ← これが Typography で表示される
+          required: false,
+        },
+      ]}
+      values={{}}
+      disabled={false}
+      onFileSelect={vi.fn()}
+      onDisplayFileNameChange={vi.fn()}
+      onDelete={vi.fn()}
+    />
+  );
+
+  // fileName が表示されている(Typography 側)
+  expect(screen.getByText('運転情報見える化_Excel.xlsx')).toBeInTheDocument();
+});
+
+
+
+
+
+
+
+
 
 it('改訂ボタン: 公開終了ならダイアログ表示', async () => {
   const user = userEvent.setup();
