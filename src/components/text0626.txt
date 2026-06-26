@@ -1,3 +1,37 @@
+it('登録モードかつ文書番号必須のとき必須マークを表示する', () => {
+  mockUseSearchParams.mockReturnValue([new URLSearchParams(''), vi.fn()]);
+  vi.mocked(useDocumentMode).mockReturnValue({
+    ...createMockDocumentModeResult(),
+    isDocumentNumberRequired: true,
+  });
+
+  render(<DocumentPage />);
+
+  // 登録モードなので必須マークが出ている(文書番号含む)
+  expect(screen.queryAllByText('必須').length).toBeGreaterThan(0);
+});
+
+it('詳細モードのときは文書番号必須でも必須マークを表示しない', () => {
+  mockUseSearchParams.mockReturnValue([
+    new URLSearchParams('tInfoId=TINFO-001&revNumber=0&internalRevNumber=0'),
+    vi.fn(),
+  ]);
+  vi.mocked(useDocumentMode).mockReturnValue({
+    ...createMockDocumentModeResult(),
+    isDocumentNumberRequired: true,
+  });
+
+  render(<DocumentPage />);
+
+  // 詳細モードは全フィールドの必須マークが消える
+  expect(screen.queryAllByText('必須')).toHaveLength(0);
+});
+
+
+
+
+
+
 describe('文書番号の必須マーク表示', () => {
   it('登録モードかつ文書番号必須のとき必須マークを表示する', () => {
     // 登録モード = tInfoId なし
